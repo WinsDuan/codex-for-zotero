@@ -1,6 +1,6 @@
 # Codex for Zotero 0.6.0 — 源码发布说明
 
-这是 Codex for Zotero 的干净源码目录。当前版本面向 Windows 上的 Zotero 10.0.x，通过本机 Codex app-server 工作；尚未接入 DeepSeek 或其他服务商的 API。普通使用者无需本地构建，可以从项目 Releases 安装 XPI。
+这是 Codex for Zotero 的干净源码目录。当前版本面向 Windows 上的 Zotero 10.0.x，通过本机 Codex app-server 工作；尚未接入 DeepSeek 或其他服务商的 API。普通使用者无需本地构建；如需预编译 XPI，请查看仓库后续发布的 Release 说明。本仓库当前先发布源码。
 
 > **非官方项目声明：** 本插件由独立开发者维护，不由 Zotero / Corporation for Digital Scholarship、OpenAI 或 Codex 团队开发、授权、认证或背书。名称和图标仅用于说明兼容与集成关系。详见根目录 `THIRD-PARTY-NOTICES.txt`。
 

@@ -9,6 +9,7 @@ Windows 上的 Zotero 10 文献工作台，通过本机 Codex app-server 连接�
 **当前接口范围：** 0.6.0 仅连接本机 Codex app-server；尚未实现 DeepSeek 或其他模型服务商的 API 接入。使用需要安装并登录本机 Codex。
 
 0.6.0 增加固定导航、常驻可伸缩输入框、鼠标选中复制、生成文件打开/定位、消息编辑版本与文件清理。详见 packaging/windows/界面与对话管理.md。
+
 ## 打开与使用
 
 右侧入口找不到时，点击 Zotero 顶部常驻的 **ChatGPT 标志 + Codex** 按钮，或按 **Ctrl+Alt+C**，即可展开右侧 Codex。插件不自动恢复或固定面板，打开新文献时保持 Zotero 的正常侧栏顺序。升级会一次性清除 0.3.1 留下的 Codex 固定设置。
