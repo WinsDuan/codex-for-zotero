@@ -8,6 +8,8 @@ Windows 上的 Zotero 10 文献工作台，通过本机 Codex app-server 连接�
 
 **当前接口范围：** 0.6.0 仅连接本机 Codex app-server；尚未实现 DeepSeek 或其他模型服务商的 API 接入。使用需要安装并登录本机 Codex。
 
+**直接安装（Windows / Zotero 10）：** [下载 0.6.0 XPI](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.0.xpi) · SHA-256：`DCF2ED33287E43DD8B7F390BA9CB5916BCB474587B8738A2AC1A9E096C3DF2CE`
+
 0.6.0 增加固定导航、常驻可伸缩输入框、鼠标选中复制、生成文件打开/定位、消息编辑版本与文件清理。详见 packaging/windows/界面与对话管理.md。
 
 ## 项目简介
