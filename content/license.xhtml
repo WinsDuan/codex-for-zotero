@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:h="http://www.w3.org/1999/xhtml" title="设备授权" width="660" height="650">
+  <h:style>
+    :root{color-scheme:light dark}window{padding:0}main{padding:24px;overflow:auto;font:15px/1.7 system-ui,"Microsoft YaHei",sans-serif;box-sizing:border-box;flex:1;min-width:0}h1{font-size:23px;margin:0 0 12px}p{margin:10px 0}textarea{box-sizing:border-box;width:100%;height:120px;padding:10px;font:12px/1.5 Consolas,monospace;overflow-wrap:anywhere;resize:vertical}button{font:inherit;padding:8px 14px;margin:6px 8px 4px 0;cursor:pointer}#status{font-weight:600;overflow-wrap:anywhere}.hint{font-size:13px;opacity:.8}.actions{display:flex;flex-wrap:wrap}#error{color:#dc6262;white-space:pre-wrap;overflow-wrap:anywhere}#details{white-space:pre-wrap}button:disabled{opacity:.5}
+  </h:style>
+  <h:main>
+    <h:h1>设备授权</h:h1>
+    <h:p id="status">正在读取授权状态…</h:p>
+    <h:p id="details"/>
+    <h:p>将下方申请码发给发行者，收到专属 .czlicense 文件后导入激活。</h:p>
+    <h:textarea id="request" readonly="readonly" aria-label="当前 Windows 设备申请码"/>
+    <h:div class="actions"><h:button id="copy">复制申请码</h:button><h:button id="save">保存申请文件</h:button><h:button id="import">导入激活文件</h:button><h:button id="refresh">刷新状态</h:button></h:div>
+    <h:p id="error" role="alert"/>
+    <h:p class="hint">申请码包含 Windows 安装标识的产品专用 SHA-256 摘要，不含原始标识、论文、聊天、账号密码或 Codex 登录令牌。此页面不会联网。</h:p>
+    <h:p class="hint">本预览版按设备授权，每份授权仅绑定一台 Windows 安装。重装系统、设备标识变化或换电脑需重新申请；它无法核实真实身份，也不提供在线吊销。</h:p>
+    <h:p class="hint">未激活或到期后仍可查看、导出已有聊天。授权校验控制新 Codex 请求。此版本用于本地授权流程评估，商业发布前须先完成上游接入许可核对。</h:p>
+  </h:main>
+  <script src="chrome://codex-for-zotero/content/license-window.js"/>
+</window>

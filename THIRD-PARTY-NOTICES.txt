@@ -1,0 +1,43 @@
+Codex for Zotero 0.6.0 — Third-Party Notices
+
+NON-AFFILIATION NOTICE
+This is an independent, unofficial project. It is not developed, authorized,
+certified, sponsored, or endorsed by Zotero, the Corporation for Digital
+Scholarship, OpenAI, or the Codex team. Product names and the interface icon
+are used only to describe compatibility and integration. The icon identified
+below remains subject to its owner's trademark and brand-use rules and is not
+licensed under this project's MIT License.
+
+PROJECT LICENSE SCOPE
+The MIT License in the repository root applies to this project's original
+source code and documentation, except where a file or component has its own
+license or notice. Third-party software, assets, names, and marks retain their
+own terms. This project does not include Zotero, Codex, model weights, user
+accounts, credentials, papers, or conversation data.
+
+Third-party components
+
+1. KaTeX 0.19.0
+   Project: https://katex.org/
+   License: MIT
+   License and source provenance: content/vendor/katex/LICENSE and
+   content/vendor/katex/provenance.json.
+
+2. Marked 15.0.12
+   Project: https://marked.js.org/
+   License: MIT
+   License and source provenance: content/vendor/marked/LICENSE.md and
+   content/vendor/marked/provenance.json.
+
+Interface icon
+
+The knot-shaped interface icon is derived from the OpenAI documentation mark:
+https://raw.githubusercontent.com/openai/openai-agents-python/main/docs/assets/logo.svg
+The project preserves its geometry and provides monochrome display versions.
+Source and SHA256 are recorded in icons/provenance.json. OpenAI brand guidance:
+https://openai.com/brand/
+The icon is not covered by this project's MIT License. Its inclusion does not
+mean this project is official or endorsed by OpenAI.
+
+Zotero and Codex are third-party products. Their installation and use remain
+subject to their respective licenses, terms, and service conditions.

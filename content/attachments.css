@@ -1,0 +1,21 @@
+.cz-root .cz-button{height:auto;max-height:none;line-height:1.55;white-space:normal}
+.cz-root .cz-history-list{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:9px;padding:2px 0 12px;width:100%;min-width:0}
+.cz-root .cz-history-card{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;align-content:start;align-items:start;flex:none;height:auto!important;max-height:none!important;min-height:88px;width:100%;padding:12px 13px;margin:0;white-space:normal;overflow:visible;border:1px solid var(--cz-line);border-radius:9px;line-height:1.55;text-align:left}
+.cz-root .cz-history-card>*{display:block;position:static;float:none;height:auto;min-width:0;max-width:100%;margin:0;white-space:normal;line-height:1.55;overflow-wrap:anywhere}
+.cz-root .cz-history-card strong{font-size:13px;color:var(--cz-text)}
+.cz-root .cz-history-card small{font-size:11px;color:var(--cz-muted)}
+.cz-root .cz-search{z-index:1;flex:none}
+.cz-root .cz-history{min-width:0;overflow-x:hidden}
+.cz-root .cz-tabs{gap:clamp(8px,2.8cqw,18px);flex-wrap:wrap}
+.cz-root .cz-document-chips{display:grid;gap:6px;max-height:176px;overflow:auto}
+.cz-document-chip{display:grid;grid-template-columns:minmax(0,1fr) 24px;align-items:center;gap:2px 6px;padding:7px 9px;border:1px solid var(--cz-line);border-radius:8px;min-width:0}
+.cz-root .cz-document-name{grid-column:1;display:block;text-align:left;border:0;background:transparent;padding:0;color:var(--cz-accent);font-size:11px;overflow-wrap:anywhere}
+.cz-document-chip>small{grid-column:1;grid-row:2;color:var(--cz-muted);font-size:10px;line-height:1.5}
+.cz-document-chip>.cz-chip-remove{grid-column:2;grid-row:1/3;align-self:start}
+.cz-root .cz-file-actions{display:flex;gap:5px;flex-wrap:wrap}
+.cz-root .cz-file-actions .cz-button{font-size:10px;padding:3px 6px;background:transparent}
+.cz-root .cz-file-hint{font-size:10px;line-height:1.6}
+.cz-root.cz-dragover{outline:2px dashed var(--cz-accent);outline-offset:-3px;background:var(--cz-surface)}
+.cz-root .cz-image-chip{flex:none;line-height:1.5}
+.cz-root .cz-settings,.cz-root .cz-composer,.cz-root .cz-tabs,.cz-root .cz-header,.cz-root .cz-stats,.cz-root .cz-footer{flex-shrink:0}
+.chat-container .cz-settings{max-height:220px;flex-shrink:1}

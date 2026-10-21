@@ -1,0 +1,17 @@
+.cz-root.cz-root{max-height:none}
+.chat-container .cz-root{overflow:auto}
+.cz-root .cz-workspace-bar{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;padding:9px 10px;border:1px solid var(--cz-line);border-radius:8px;background:var(--cz-surface)}
+.cz-workspace-label{width:100%;font-size:10px;color:var(--cz-muted);overflow-wrap:anywhere;line-height:1.6}
+.cz-root .cz-workspace-bar button{font-size:10px;padding:4px 7px}
+.cz-root .cz-skills{grid-column:1/-1;min-width:0;border-top:1px solid var(--cz-line);padding-top:9px}
+.cz-skills summary{cursor:pointer;font-size:12px;color:var(--cz-text);overflow-wrap:anywhere}
+.cz-skills>input{width:100%;margin:7px 0}
+.cz-skills-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:5px;max-height:220px;overflow:auto}
+.cz-root .cz-skills-list button{min-height:36px;height:auto;white-space:normal;overflow-wrap:anywhere;text-align:left;font-size:11px;line-height:1.5}
+.cz-root .cz-skills-list .is-selected{border-color:var(--cz-accent);background:var(--cz-hover)}
+.cz-root .cz-files{overflow:auto;min-height:220px;max-height:500px;min-width:0;flex:1}
+.cz-root .cz-files>button{display:block;width:100%;text-align:left;margin:8px 0;overflow-wrap:anywhere}
+.chat-container .cz-files{min-height:0;max-height:none}
+.cz-tool-trace{margin:10px 0;border:1px solid var(--cz-line);border-radius:7px;padding:7px 10px;color:var(--cz-muted);font-size:10px;line-height:1.7;max-height:240px;overflow:auto;overflow-wrap:anywhere}
+.cz-tool-trace summary{cursor:pointer;color:var(--cz-text)}
+.cz-generated-image,.cz-graph-preview[role=button]{cursor:zoom-in}

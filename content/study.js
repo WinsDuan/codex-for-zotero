@@ -1,0 +1,21 @@
+(function(g){
+  'use strict';
+  const str={type:'string'};
+  const object=(properties)=>({type:'object',additionalProperties:false,properties,required:Object.keys(properties)});
+  const array=items=>({type:'array',items});
+  const schema=object({title:str,summary:str,concepts:array(object({term:str,explanation:str,source:str})),steps:array(object({title:str,detail:str,source:str})),quiz:array(object({question:str,options:array(str),correctIndex:{type:'integer'},explanation:str,source:str})),simulation:object({title:str,description:str,formulaLatex:str,expression:str,source:str,parameters:array(object({id:str,label:str,min:{type:'number'},max:{type:'number'},step:{type:'number'},value:{type:'number'}}))})});
+  const unary={sqrt:Math.sqrt,abs:Math.abs,log:Math.log,exp:Math.exp,sin:Math.sin,cos:Math.cos};
+  const binary={'+':(a,b)=>a+b,'-':(a,b)=>a-b,'*':(a,b)=>a*b,'/':(a,b)=>a/b,'^':(a,b)=>Math.abs(b)>30?NaN:a**b,min:Math.min,max:Math.max};
+  function evaluate(expression,values){const tokens=String(expression).trim().split(/\s+/);if(tokens.length>120)throw new Error('公式表达式过长');const stack=[];for(const token of tokens){if(Object.prototype.hasOwnProperty.call(values,token))stack.push(Number(values[token]));else if(token==='pi')stack.push(Math.PI);else if(/^[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?$/i.test(token))stack.push(Number(token));else if(unary[token]){if(stack.length<1)throw new Error('公式缺少操作数');stack.push(unary[token](stack.pop()));}else if(binary[token]){if(stack.length<2)throw new Error('公式缺少操作数');const b=stack.pop(),a=stack.pop();stack.push(binary[token](a,b));}else throw new Error('公式含有不支持的运算：'+token);if(stack.length&&(!Number.isFinite(stack.at(-1))||Math.abs(stack.at(-1))>1e100))throw new Error('当前参数超出公式的可计算范围');}if(stack.length!==1)throw new Error('公式表达式无效');return stack[0];}
+  function normalize(source){
+    if(!source||typeof source.title!=='string'||!Array.isArray(source.concepts)||!Array.isArray(source.steps)||!Array.isArray(source.quiz))throw new Error('学习包格式无效，请重新生成');
+    if(source.concepts.length>12||source.steps.length>12||source.quiz.length>8)throw new Error('单个学习包最多 12 个概念、12 个步骤、8 道题');
+    const clean=s=>String(s||'').slice(0,8000);
+    const result={title:clean(source.title).slice(0,100),summary:clean(source.summary),concepts:source.concepts.map(c=>({term:clean(c.term).slice(0,100),explanation:clean(c.explanation),source:clean(c.source)})),steps:source.steps.map(s=>({title:clean(s.title).slice(0,150),detail:clean(s.detail),source:clean(s.source)})),quiz:source.quiz.map(q=>{if(!Array.isArray(q.options)||q.options.length<2||q.options.length>5||!Number.isInteger(q.correctIndex)||q.correctIndex<0||q.correctIndex>=q.options.length)throw new Error('选择题的选项或答案下标无效');return{question:clean(q.question),options:q.options.map(clean),correctIndex:q.correctIndex,explanation:clean(q.explanation),source:clean(q.source)};}),simulation:null};
+    const sim=source.simulation;if(sim?.expression&&sim.parameters?.length){if(sim.parameters.length>4||sim.expression.length>1500)throw new Error('交互演示最多 4 个参数');const ids=new Set();const parameters=sim.parameters.map(p=>{if(!/^[a-zA-Z][a-zA-Z0-9_]{0,16}$/.test(p.id)||ids.has(p.id)||unary[p.id]||binary[p.id]||p.id==='pi')throw new Error('演示参数 id 无效');ids.add(p.id);const values=['min','max','step','value'].map(k=>Number(p[k]));if(values.some(v=>!Number.isFinite(v)||Math.abs(v)>1e9)||!(values[0]<values[1])||values[2]<=0||values[3]<values[0]||values[3]>values[1])throw new Error('演示参数范围无效');return{id:p.id,label:clean(p.label).slice(0,80),min:values[0],max:values[1],step:values[2],value:values[3]};});const values=Object.fromEntries(parameters.map(p=>[p.id,p.value]));evaluate(sim.expression,values);result.simulation={title:clean(sim.title),description:clean(sim.description),formulaLatex:clean(sim.formulaLatex),expression:sim.expression,source:clean(sim.source),parameters};}
+    return result;
+  }
+  function parse(text){let value;try{value=JSON.parse(String(text).trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));}catch{throw new Error('模型未返回有效的学习包，请重试');}return normalize(value);}
+  g.CodexStudy={schema,parse,normalize,evaluate};
+  if(typeof module!=='undefined'&&module.exports)module.exports=g.CodexStudy;
+})(this);

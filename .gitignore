@@ -1,0 +1,33 @@
+# Local development data and browser/Zotero profiles
+/dev/
+/dist/
+/release/
+/github-release-stage/
+/插件清单.md
+
+# Build outputs
+*.xpi
+*.zip
+*.zip.sha256
+
+# Local secrets and runtime data
+.env
+.env.*
+!.env.example
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.pem
+*.key
+
+# Python and editor caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

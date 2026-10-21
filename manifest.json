@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+  "name": "Codex for Zotero",
+  "version": "0.6.0",
+  "description": "Codex research workbench: document attachments, parallel reading, paper comparison, interactive learning and editable diagrams for Zotero.",
+  "author": "DuanC",
+  "applications": {
+    "zotero": {
+      "id": "codex-for-zotero@duanc.local",
+      "strict_min_version": "10.0.0",
+      "strict_max_version": "10.0.*"
+    }
+  }
+}

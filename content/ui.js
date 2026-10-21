@@ -1,0 +1,131 @@
+(function (global) {
+  'use strict';
+  const NS='http://www.w3.org/1999/xhtml';
+  const el=(d,t,c,text)=>{const n=d.createElementNS(NS,t);if(c)n.className=c;if(text!==undefined)n.textContent=text;return n;};
+  const button=(d,text,handler,cls='')=>{const b=el(d,'button','cz-button '+cls,text);b.type='button';b.addEventListener('click',handler);return b;};
+  function options(select,values,selected){const key=JSON.stringify(values);if(select.dataset.options!==key){select.replaceChildren();for(const [value,label]of values){const option=el(select.ownerDocument,'option','',label);option.value=value;select.append(option);}select.dataset.options=key;}select.value=selected;}
+  const markdown = global.CodexRichText.render;
+  function create(controller,body,doc,initialItem){
+    controller.attachWindow(doc.defaultView);
+    if(!doc.getElementById('codex-for-zotero-style')){const link=el(doc,'link');link.id='codex-for-zotero-style';link.rel='stylesheet';link.href=controller.rootURI+'content/panel.css?v=060-final';doc.documentElement.append(link);}
+    if(!doc.getElementById('codex-for-zotero-experience-style')){const link=el(doc,'link');link.id='codex-for-zotero-experience-style';link.rel='stylesheet';link.href=controller.rootURI+'content/experience.css?v=060-final';doc.documentElement.append(link);}
+    body.replaceChildren();const root=el(doc,'section','cz-root');body.append(root);
+    const view={body,doc,root,item:null,itemKey:null,tab:'chat',images:[],atBottom:true,settingsOpen:false,messageLimit:60,readingMode:false};
+    const error=el(doc,'div','cz-error');view.error=error;
+    const report=e=>{error.textContent=controller.friendlyError(e);};
+    const act=fn=>()=>{error.textContent='';Promise.resolve().then(fn).catch(report);};
+    const header=el(doc,'header','cz-header');header.append(el(doc,'span','cz-brand','CODEX'),el(doc,'span','cz-badge','文献工作台'));
+    const status=el(doc,'span','cz-status');view.status=status;
+    const connect=button(doc,'连接',act(()=>controller.client.ready?controller.reconnect():controller.connect()));view.connect=connect;
+    const expand=button(doc,'↗',()=>controller.openWindow(),'cz-icon');expand.title='打开大窗口';
+    const reading=button(doc,'阅读',()=>{view.readingMode=!view.readingMode;controller.render(view);});reading.title='收起输入区，专注阅读回答';view.reading=reading;
+    const gear=button(doc,'⚙',()=>{view.settingsOpen=!view.settingsOpen;controller.render(view);},'cz-icon');gear.title='设置';header.append(status,connect,reading,expand,gear);
+    const license=button(doc,'授权',act(()=>controller.openLicense()));view.license=license;license.hidden=!controller.licensing?.required;header.append(license);
+    const nav=el(doc,'nav','cz-tabs');for(const [id,title]of[['chat','聊天'],['history','历史'],['tools','工具'],['learning','学习'],['files','文件']])nav.append(button(doc,title,()=>{view.tab=id;controller.render(view);},'cz-tab cz-tab-'+id));
+    view.compare=button(doc,'对比',act(()=>controller.openComparison(view)),'cz-tab');nav.append(view.compare);
+    nav.append(button(doc,'☷',()=>{view.sidebarOpen=!view.sidebarOpen;controller.render(view);},'cz-icon cz-sidebar-toggle'));
+    const title=el(doc,'div','cz-title');view.title=title;
+    const convbar=el(doc,'div','cz-convbar');const conversations=el(doc,'select');conversations.setAttribute('aria-label','当前文献的对话');view.conversations=conversations;
+    const newChat=button(doc,'＋',act(()=>controller.newConversation(view.item)),'cz-icon');newChat.title='新建独立对话';view.newChat=newChat;
+    const archive=button(doc,'归档',act(()=>controller.toggleArchive(view.item)));view.archive=archive;
+    const name=el(doc,'input','cz-chat-name');name.placeholder='对话名称';name.setAttribute('aria-label','重命名对话');view.name=name;
+    const nameRow=el(doc,'div','cz-name-row');view.nameRow=nameRow;nameRow.append(name,archive);convbar.append(conversations,newChat);
+    const workspaceBar=el(doc,'div','cz-workspace-bar');view.workspaceLabel=el(doc,'div','cz-workspace-label');view.chooseWorkspace=button(doc,'选择保存位置',act(()=>controller.chooseWorkspace(view)));view.defaultWorkspace=button(doc,'使用 Zotero 默认位置',act(()=>controller.chooseWorkspace(view,true)));workspaceBar.append(view.workspaceLabel,view.chooseWorkspace,view.defaultWorkspace);
+    const settings=el(doc,'div','cz-settings');view.settings=settings;
+    const field=(label,control)=>{const wrap=el(doc,'label','cz-field');wrap.append(el(doc,'span','',label),control);settings.append(wrap);return control;};
+    const number=(label,key,min,max)=>{const n=el(doc,'input');n.type='number';n.min=min;n.max=max;n.step=key==='historyRounds'?1:1000;field(label,n);n.addEventListener('change',()=>{if(view.item){controller.updateSettings(view.item,{[key]:Number(n.value)});}});return n;};
+    view.historyMode=field('历史发送方式',el(doc,'select'));options(view.historyMode,[['continuous','Codex 连续历史（原生压缩）'],['bounded','限量历史（每轮重建，不压缩）']],'continuous');
+    view.historyMode.addEventListener('change',()=>view.item&&controller.updateSettings(view.item,{historyMode:view.historyMode.value}));
+    view.rounds=number('发送最近几轮', 'historyRounds',0,100);view.historyChars=number('历史字数上限','historyChars',0,500000);view.paperChars=number('文献字数预算（字，不是 Token）','paperChars',1000,2000000);
+    const toolsAllowed=field('允许工作区工具运行并保存文件',el(doc,'input'));toolsAllowed.type='checkbox';toolsAllowed.addEventListener('change',()=>view.item&&controller.updateSettings(view.item,{toolMode:toolsAllowed.checked?'workspace':'readonly'}));view.toolsAllowed=toolsAllowed;
+    view.compact=button(doc,'压缩连续历史',act(()=>controller.compactConversation(view)));settings.append(view.compact);
+    const timeout=field('本地等待时限（分钟）',el(doc,'input'));timeout.type='number';timeout.min=1;timeout.max=120;timeout.value=controller.prefInt('timeoutMinutes',30);timeout.addEventListener('change',()=>controller.setPrefInt('timeoutMinutes',Math.max(1,Math.min(120,Number(timeout.value)||30))));
+    const skills=el(doc,'details','cz-skills');view.skillsSummary=el(doc,'summary','','本地 Skill：未指定');view.loadSkills=button(doc,'读取本地 Skill',act(()=>controller.loadSkills(view)));view.skillsSearch=el(doc,'input');view.skillsSearch.placeholder='筛选本地技能';view.skillsSearch.addEventListener('input',()=>controller.render(view));view.skillsList=el(doc,'div','cz-skills-list');skills.append(view.skillsSummary,view.loadSkills,view.skillsSearch,view.skillsList);settings.append(skills);
+    view.answerLength=field('回答长度偏好',el(doc,'select'));options(view.answerLength,[['short','简短'],['standard','标准'],['long','详细']],'standard');view.answerLength.addEventListener('change',()=>view.item&&controller.updateSettings(view.item,{answerLength:view.answerLength.value}));
+    view.effortSlider=field('思考强度滑杆（0 为默认）',el(doc,'input'));view.effortSlider.type='range';view.effortSlider.min=0;view.effortSlider.step=1;view.effortSlider.addEventListener('change',()=>{if(view.item)controller.updateSettings(view.item,{effort:view.effortValues[Number(view.effortSlider.value)-1]||''});});
+    const limit=field('每篇活跃对话上限',el(doc,'input'));limit.type='number';limit.min=1;limit.max=200;limit.value=controller.prefInt('maxChats',50);limit.addEventListener('change',()=>{controller.setPrefInt('maxChats',Math.max(1,Math.min(200,Number(limit.value)||50)));});
+    const font=field('字号',el(doc,'select'));options(font,[['12','12'],['14','14'],['16','16'],['18','18']],String(controller.prefInt('fontSize',14)));font.addEventListener('change',()=>{controller.setPrefInt('fontSize',Number(font.value));controller.refreshViews();});
+    const theme=field('界面主题',el(doc,'select'));options(theme,[['dark','深色'],['light','浅色'],['auto','跟随系统']],controller.prefString('theme','dark'));theme.addEventListener('change',()=>{controller.setPrefString('theme',theme.value);controller.refreshViews();});
+    const path=field('Codex 程序路径',el(doc,'input'));path.value=controller.prefString('codexPath','');path.placeholder='留空自动查找 codex.exe';
+    settings.append(button(doc,'保存路径并重连',act(async()=>{controller.setPrefString('codexPath',path.value.trim());await controller.reconnect();})));
+    settings.append(el(doc,'div','cz-hint','连续历史由本机 Codex 管理压缩；限量模式截取最近几轮，并不是自动摘要。窗口以运行时报告为准。Skill 的依赖、联网和审批受本机环境与沙箱约束，不默认获得工作区外写入权限。'));
+    const history=el(doc,'div','cz-history');view.history=history;const search=el(doc,'input','cz-search');search.placeholder='搜索所有文献的对话';view.search=search;search.addEventListener('input',()=>renderHistory(controller,view));history.append(search);const historyList=el(doc,'div','cz-history-list');view.historyList=historyList;history.append(historyList);
+    const tools=el(doc,'div','cz-tools');view.tools=tools;
+    const templates=[['论文速读','请根据已提供的文献，用研究问题、方法、结果、局限四部分总结；没有全文时请说明。','chat'],['方法拆解','请拆解本文方法的输入、处理步骤、关键假设与输出，并指出复现还缺少什么。','chat'],['比较文献','请比较所选文献的研究问题、方法、结果和适用条件，区分有证据的结论与待确认内容。','chat'],['审稿视角','请基于当前材料，检查创新性、研究设计、证据与结论之间的对应关系，列出需要核对的问题。','chat'],['图片解读','请识别所附图片的文字、图例、坐标与主要关系。不能辨认的内容请明确标记，不要猜测数值。','chat'],['科研示意图','请将论文的研究流程整理成清晰的科研示意图，标注输入、方法模块、实验与输出，不要虚构数据。','diagram'],['论文思维导图','请将论文整理成思维导图，包含研究问题、背景、方法、主要结果、局限和后续问题。','mindmap'],['交互阅读学习包','请为这篇论文制作交互学习包，包括概念卡片、方法步骤、自测题；如有可安全演示的简单公式，请加入可调参数的教学演示。','study']];
+    for(const [label,prompt,mode]of templates)tools.append(button(doc,label,()=>{view.input.value=prompt;view.task.value=mode;view.tab='chat';view.readingMode=false;controller.render(view);view.input.focus();},'cz-tool-card'));
+    const custom=el(doc,'textarea','cz-template-json');custom.setAttribute('aria-label','自定义提示词 JSON');custom.value=JSON.stringify(controller.customPrompts,null,2);
+    const customDetails=el(doc,'details','cz-custom');customDetails.append(el(doc,'summary','','自定义工具与提示词'),el(doc,'p','cz-hint','填写 JSON 数组，每项包含 name、prompt；mode 可选 chat、diagram、mindmap。只保存提示词，不执行脚本。'),custom,button(doc,'保存提示词',act(()=>{controller.savePrompts(JSON.parse(custom.value));renderCustom(controller,view);})));tools.append(customDetails);view.customCards=el(doc,'div','cz-custom-cards');tools.append(view.customCards);
+    const learning=el(doc,'div','cz-learning');view.learning=learning;const files=el(doc,'div','cz-files');view.files=files;
+    const messages=el(doc,'div','cz-messages');view.messages=messages;messages.setAttribute('aria-live','polite');messages.addEventListener('scroll',()=>{view.atBottom=messages.scrollHeight-messages.scrollTop-messages.clientHeight<55;});
+    const workspace=el(doc,'div','cz-workarea'),mainArea=el(doc,'div','cz-main-area'),sidebar=el(doc,'aside','cz-sidebar');view.sidebar=sidebar;mainArea.append(history,tools,learning,files,messages);workspace.append(mainArea,sidebar);
+    const composer=el(doc,'div','cz-composer');view.composer=composer;
+    const contextRow=el(doc,'div','cz-context-row');view.full=el(doc,'input');view.full.type='checkbox';const fullLabel=el(doc,'label');fullLabel.append(view.full,doc.createTextNode('索引全文'));view.multiPaper=el(doc,'input');view.multiPaper.type='checkbox';const multiLabel=el(doc,'label');multiLabel.append(view.multiPaper,doc.createTextNode('所选多篇'));contextRow.append(fullLabel,multiLabel);
+    for(const [control,key]of[[view.full,'fullText'],[view.multiPaper,'multiPaper']])control.addEventListener('change',()=>view.item&&controller.updateSettings(view.item,{[key]:control.checked}));
+    const images=el(doc,'div','cz-image-chips');view.imageChips=images;
+    const documents=el(doc,'div','cz-document-chips');view.documentChips=documents;
+    const fileActions=el(doc,'div','cz-file-actions');view.fileActions=fileActions;
+    view.addLibrary=button(doc,'加入所选 PDF',act(()=>controller.addLibraryDocuments(view)));view.addLibrary.title='将 Zotero 文献库中所选条目的本地 PDF 加入当前对话';
+    view.parallel=button(doc,'并排对读',act(()=>controller.openComparison(view)));
+    view.comparePrompt=button(doc,'让 Codex 比较',()=>{view.input.value='请比较当前文献和本对话添加的资料，按研究问题、假设、方法、实验和结论列出异同，并标明各自来源。';view.task.value='compare';view.tab='chat';controller.render(view);view.input.focus();});
+    fileActions.append(view.addLibrary,view.parallel,view.comparePrompt);
+    const fileHint=el(doc,'div','cz-hint cz-file-hint');view.fileHint=fileHint;
+    const input=el(doc,'textarea','cz-input');input.placeholder='输入问题，或拖入 PDF、Word、文本和图片…';input.setAttribute('aria-label','向 Codex 提问');view.input=input;
+    const bottom=el(doc,'div','cz-input-actions');const addImage=button(doc,'＋',act(()=>controller.pickFiles(view)),'cz-icon');addImage.title='添加 PDF、DOCX、TXT、Markdown、CSV、JSON 或图片';addImage.setAttribute('aria-label','添加论文、文档或图片');view.addImage=addImage;
+    const task=el(doc,'select','cz-task');options(task,[['chat','对话'],['image','生图'],['compare','对比'],['diagram','科研图'],['mindmap','思维导图'],['study','学习']],'chat');view.task=task;
+    const model=el(doc,'select','cz-model-select');model.setAttribute('aria-label','模型');view.model=model;model.addEventListener('change',()=>view.item&&controller.updateSettings(view.item,{model:model.value,effort:''}));
+    const effort=el(doc,'select','cz-effort-select');effort.setAttribute('aria-label','思考强度');view.effort=effort;effort.addEventListener('change',()=>view.item&&controller.updateSettings(view.item,{effort:effort.value}));
+    const stop=button(doc,'■',act(()=>controller.stop()),'cz-icon');stop.title='停止生成';view.stop=stop;
+    const submit=act(async()=>{if(!view.item||controller.operation||controller.importing||controller.managementBusy)return;const question=input.value.trim();const docs=controller.sessionFor(view.item)?.documents||[];if(!question&&!view.images.length&&!docs.length)return;const text=question||(docs.length?'请说明当前文献和所附资料各自的主要内容与关系，标明材料范围。':'请解释这张图片。');if(['diagram','mindmap'].includes(task.value)&&/image\s*2[.．]5|生图模型/i.test(text))task.value='image';input.value='';view.atBottom=true;const attached=[...view.images];try{await controller.ask(view.item.id,text,{images:attached,task:task.value});view.images=[];controller.render(view);}catch(e){input.value=question;throw e;}});
+    const send=button(doc,'↑',submit,'cz-send');send.title='发送';view.send=send;
+    input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();submit();}});
+    input.addEventListener('paste',event=>{const files=[...(event.clipboardData?.files||[])];if(files.length){event.preventDefault();act(()=>controller.ingestFiles(view,files))();}});
+    root.addEventListener('dragover',event=>{if([...(event.dataTransfer?.types||[])].some(t=>['Files','application/x-moz-file','zotero/item'].includes(t))){event.preventDefault();event.stopPropagation();event.dataTransfer.dropEffect='copy';root.classList.add('cz-dragover');}});
+    root.addEventListener('dragleave',event=>{if(!root.contains(event.relatedTarget))root.classList.remove('cz-dragover');});
+    root.addEventListener('drop',event=>{root.classList.remove('cz-dragover');const files=[...(event.dataTransfer?.files||[])],items=event.dataTransfer?.getData('zotero/item');if(files.length||items){event.preventDefault();event.stopPropagation();act(()=>files.length?controller.ingestFiles(view,files):controller.addLibraryDocuments(view,String(items).split(',').map(Number).filter(n=>Number.isSafeInteger(n)&&n>0).slice(0,12)))();}});
+    bottom.append(addImage,task,model,effort,stop,send);composer.append(contextRow,images,documents,fileActions,fileHint,input,bottom);
+    const stats=el(doc,'div','cz-stats');view.stats=stats;
+    const footer=el(doc,'div','cz-footer');view.save=button(doc,'保存回答为笔记',act(()=>controller.saveLastAnswer(view.item.id)));view.export=button(doc,'导出对话',act(()=>controller.exportConversation(view)));footer.append(view.save,view.export);
+    root.append(header,nav,title,convbar,workspaceBar,nameRow,settings,workspace,error,composer,stats,footer);
+    conversations.addEventListener('change',()=>{if(view.item&&!controller.operation){controller.containerFor(view.item).activeId=conversations.value;view.atBottom=true;view.messageLimit=60;void controller.persist();controller.refreshViews();}});
+    name.addEventListener('change',()=>{if(view.item){const chat=controller.sessionFor(view.item);chat.name=name.value.trim().slice(0,100)||'未命名对话';void controller.persist();controller.refreshViews();}});
+    global.CodexExperience.mount(controller,view);
+    controller.views.add(view);controller.setItem(view,initialItem||null);renderCustom(controller,view);return view;
+  }
+  function renderCustom(c,v){v.customCards.replaceChildren();for(const t of c.customPrompts)v.customCards.append(button(v.doc,t.name,()=>{v.input.value=t.prompt;v.task.value=t.mode||'chat';v.tab='chat';c.render(v);v.input.focus();},'cz-tool-card'));}
+  function renderHistory(c,v){v.historyList.replaceChildren();const query=v.search.value.trim().toLowerCase();let count=0;for(const [key,container]of [...c.sessions.entries()].reverse())for(const chat of [...container.conversations].reverse()){if(query&&!((chat.name+' '+container.title).toLowerCase().includes(query)))continue;const row=button(v.doc,'',()=>{c.focusConversation(v,key,chat.id);},'cz-history-card');row.append(el(v.doc,'strong','',chat.name+(chat.archived?' · 已归档':'')),el(v.doc,'small','',container.title||'未命名文献'),el(v.doc,'span','cz-hint',chat.messages.length+' 条消息 · '+new Date(chat.updatedAt||chat.createdAt).toLocaleDateString()));v.historyList.append(row);if(++count>=150)return;}if(!count)v.historyList.append(el(v.doc,'p','cz-hint','还没有匹配的对话。'));}
+  function render(c,v){
+    if(c.closed)return;const chat=c.sessionFor(v.item),settings=chat?.settings||global.CodexState.defaults;const running=Boolean(c.operation),busy=running||Boolean(c.importing);
+    if(v.license){v.license.hidden=!c.licensing?.required;v.license.textContent=c.licensing?.status.valid?'已授权':'授权';v.license.title=c.licensing?.status.message||'';}
+    if(v.tab!=='chat')v.readingMode=false;
+    v.root.dataset.theme=c.prefString('theme','dark');v.root.style.setProperty('--cz-font',c.prefInt('fontSize',14)+'px');v.settings.hidden=!v.settingsOpen;v.nameRow.hidden=!v.settingsOpen;v.root.classList.toggle('cz-reading-mode',v.readingMode&&v.tab==='chat');v.reading.textContent=v.readingMode?'输入':'阅读';
+    for(const tab of['chat','history','tools','learning','files']){v.root.querySelector('.cz-tab-'+tab).classList.toggle('is-active',v.tab===tab);}v.history.hidden=v.tab!=='history';v.tools.hidden=v.tab!=='tools';v.learning.hidden=v.tab!=='learning';v.files.hidden=v.tab!=='files';v.messages.hidden=v.tab!=='chat';v.composer.hidden=v.tab!=='chat';v.sidebar.hidden=!v.sidebarOpen;
+    v.status.textContent=c.importing?'正在读取文件…':c.operation&&c.operation.chatId===chat?.id?(c.operation.status||'正在回答…'):c.connection;v.status.dataset.ready=String(c.client.ready);v.connect.disabled=Boolean(c.connecting||busy);v.connect.textContent=c.client.ready?'重连':'连接';
+    v.title.textContent=v.item?(v.item.getField('title')||'未命名文献'):'在 Zotero 中选择文献后开始';const container=v.item&&c.containerFor(v.item);
+    const configured=Boolean(chat?.workspace&&!chat.storageError);v.workspaceLabel.textContent=chat?.storageError||chat?.workspace||'开始前请选择保存位置：聊天、附件和产物将放在此对话的独立文件夹中。';v.workspaceLabel.title=chat?.workspace||'';v.chooseWorkspace.textContent=chat?.storageError?'定位原工作区':'选择保存位置';v.chooseWorkspace.disabled=!chat||busy||configured;v.defaultWorkspace.textContent=c.prefString('defaultWorkspaceParent','')?'使用上次父目录':'使用 Zotero 默认位置';v.defaultWorkspace.hidden=configured||Boolean(chat?.storageError);v.defaultWorkspace.disabled=!chat||busy;
+    options(v.conversations,(container?.conversations||[]).map(s=>[s.id,(s.archived?'[已归档] ':'')+s.name]),chat?.id||'');v.conversations.disabled=busy||!chat;
+    if(v.doc.activeElement!==v.name)v.name.value=chat?.name||'';v.name.disabled=!chat||running;v.archive.textContent=chat?.archived?'恢复':'归档';v.archive.disabled=!chat||running;v.newChat.disabled=!chat||running;
+    v.historyMode.value=settings.historyMode;v.rounds.value=settings.historyRounds;v.historyChars.value=settings.historyChars;v.paperChars.value=settings.paperChars;v.answerLength.value=settings.answerLength;v.rounds.disabled=v.historyChars.disabled=settings.historyMode!=='bounded'||running;
+    v.toolsAllowed.checked=settings.toolMode==='workspace';v.toolsAllowed.disabled=busy;v.compact.disabled=!configured||busy||settings.historyMode!=='continuous'||!chat?.threadId||chat.threadWorkspace!==(chat.executionDir||chat.workspace);v.loadSkills.disabled=!configured||busy;
+    const availableSkills=c.skillsByWorkspace?.get(chat?.executionDir||chat?.workspace)||[],selectedSkill=availableSkills.find(s=>s.path===settings.skillPath);v.skillsSummary.textContent='本地 Skill：'+(selectedSkill?.name||(settings.skillPath?'请重新读取技能列表':'未指定'));v.skillsList.replaceChildren();const clear=button(v.doc,'不指定 Skill',()=>c.updateSettings(v.item,{skillPath:''}));clear.disabled=busy;v.skillsList.append(clear);const skillQuery=v.skillsSearch.value.toLocaleLowerCase();for(const skill of availableSkills.filter(s=>(s.name+' '+s.description).toLocaleLowerCase().includes(skillQuery))){const b=button(v.doc,skill.name,()=>{c.updateSettings(v.item,{skillPath:skill.path});v.skillsSummary.parentElement.open=false;});b.title=skill.description+'\n'+skill.path;b.disabled=busy;if(skill.path===settings.skillPath)b.classList.add('is-selected');v.skillsList.append(b);}if(v.skillError)v.skillsList.append(el(v.doc,'p','cz-hint',v.skillError));
+    for(const control of[v.historyMode,v.paperChars,v.answerLength,v.full,v.multiPaper,v.task,v.model,v.effort,v.newChat,v.archive])control.disabled=!chat||busy;
+    v.full.checked=settings.fullText;v.multiPaper.checked=settings.multiPaper;
+    options(v.model,[['','Codex 默认模型'],...c.models.map(m=>[m.model,m.displayName||m.model])],settings.model);
+    const metadata=c.modelFor(settings.model||chat?.actualModel);const names={none:'无',minimal:'极低',low:'低',medium:'中',high:'高',xhigh:'极高',max:'最高',ultra:'极致'};
+    const efforts=(metadata?.supportedReasoningEfforts||[]).map(e=>typeof e==='string'?e:e.reasoningEffort).filter(Boolean);
+    v.effortValues=efforts;v.effortSlider.max=efforts.length;v.effortSlider.value=efforts.indexOf(settings.effort)+1;v.effortSlider.disabled=!efforts.length||running;
+    options(v.effort,[['','强度：默认'],...efforts.map(e=>[e,'思考：'+(names[e]||e)])],efforts.includes(settings.effort)?settings.effort:'');v.effort.title=metadata?'仅列出该模型实际支持的强度':'先选择具体模型，或完成一次默认模型调用';
+    global.CodexExperience.update(c,v,chat);
+    global.CodexExperience.renderMessages(c,v,chat);
+    v.imageChips.replaceChildren();v.images.forEach((image,i)=>{const chip=el(v.doc,'span','cz-image-chip',image.name);chip.append(button(v.doc,'×',()=>{v.images.splice(i,1);c.render(v);},'cz-chip-remove'));v.imageChips.append(chip);});
+    v.documentChips.replaceChildren();for(const doc of chat?.documents||[]){const chip=el(v.doc,'div','cz-document-chip'),open=button(v.doc,doc.name,()=>c.openComparison(v,doc.id),'cz-document-name');open.title=doc.name+'\n'+doc.warning;const meta=el(v.doc,'small','',doc.extension.toUpperCase()+' · '+Number(doc.chars).toLocaleString()+' 字'+(doc.warning?' · 范围提示':''));const remove=button(v.doc,'×',()=>{try{c.removeDocument(v,doc.id);}catch(e){v.error.textContent=e.message;}},'cz-chip-remove');remove.title='从当前对话移除这份材料';remove.disabled=busy;chip.append(open,meta,remove);v.documentChips.append(chip);}
+    const docCount=chat?.documents?.length||0;v.fileHint.textContent=docCount?docCount+' 份文档保留在此对话，每轮按上下文预算发送。点击文件名可并排阅读提取文本；文献对比模式会尝试读取主论文正文。':'可拖入 PDF、DOCX、文本或图片。文档保留在当前对话，最多 8 份；图片最多 4 张。';
+    v.send.disabled=!chat||chat.archived||busy||!configured;v.stop.disabled=!running;v.addImage.disabled=!chat||chat.archived||busy||!configured;v.export.disabled=!chat||!chat.messages.length;
+    for(const control of[v.addLibrary,v.parallel,v.comparePrompt,v.compare])control.disabled=!chat||busy||(control===v.addLibrary&&!configured);
+    const answer=chat?.messages.filter(m=>m.role==='assistant'&&m.status==='completed').at(-1);v.save.disabled=!answer?.text||Boolean(answer.savedNoteKey)||running;v.save.textContent=answer?.savedNoteKey?'回答已保存':'保存回答为笔记';
+    if(v.tab==='files')global.CodexExperience.renderFiles(c,v,chat);
+    if(v.tab==='history')renderHistory(c,v);
+    if(v.tab==='learning'){v.learning.replaceChildren();const packs=(chat?.messages||[]).filter(m=>m.study);if(!packs.length){v.learning.append(el(v.doc,'h3','','交互阅读与学习'),el(v.doc,'p','cz-hint','生成概念卡片、步骤展开、自测题和可调参数演示。'),button(v.doc,'制作这篇论文的学习包',()=>{v.input.value='请为本文制作有来源依据的交互阅读学习包。';v.task.value='study';v.tab='chat';c.render(v);}));}for(const m of packs)v.learning.append(button(v.doc,m.study.title,()=>c.openStudy(m.study,v.item.id),'cz-tool-card'));}
+    if(v.sidebarOpen){v.sidebar.replaceChildren();v.sidebar.append(el(v.doc,'h4','','阅读助手'));const latest=[...v.messages.querySelectorAll('.cz-assistant')].at(-1);const headings=latest?[...latest.querySelectorAll('h1,h2,h3,h4')]:[];if(headings.length){v.sidebar.append(el(v.doc,'h5','','回答目录'));for(const h of headings)v.sidebar.append(button(v.doc,h.textContent,()=>{v.atBottom=false;h.scrollIntoView({behavior:'smooth',block:'start'});},'cz-outline-link'));}v.sidebar.append(button(v.doc,'解释回答中的选中文字',()=>{const selection=v.doc.defaultView.getSelection()?.toString().trim();if(!selection){v.error.textContent='请先在回答中选择一段文字';return;}v.input.value='请结合论文上下文，用更直观的例子解释：\n'+selection.slice(0,8000);v.tab='chat';c.render(v);}));const pack=(chat?.messages||[]).filter(m=>m.study).at(-1)?.study;if(pack){v.sidebar.append(el(v.doc,'h5','','概念卡片'));for(const concept of pack.concepts){const detail=el(v.doc,'details','cz-concept-card');detail.append(el(v.doc,'summary','',concept.term),el(v.doc,'p','',concept.explanation));v.sidebar.append(detail);}v.sidebar.append(button(v.doc,'进入测验与公式演示',()=>c.openStudy(pack,v.item.id)));}const artifacts=(chat?.messages||[]).filter(m=>m.artifact).slice(-10);if(artifacts.length)v.sidebar.append(el(v.doc,'h5','','文献图谱'));for(const message of artifacts)v.sidebar.append(button(v.doc,message.artifact.graph.title,()=>c.openArtifact(message.artifact,v.item.id),'cz-outline-link'));}
+  }
+  global.CodexUI={create,render,markdown:global.CodexRichText.render};
+})(this);
