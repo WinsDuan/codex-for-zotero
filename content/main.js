@@ -61,21 +61,24 @@
       if(error?.code==='CODEX_EXECUTABLE_NOT_FOUND')return text;
       if(/dynamicTools|DynamicToolSpec|experimentalApi/i.test(text))return '当前 Codex 引擎不支持插件的 PDF 阅读工具接口。请更新本机 Codex 后重连；不会把未读 PDF 当作已读。原始错误：'+text.slice(0,240);
       if(/contextWindowExceeded|context window|maximum context length/i.test(JSON.stringify(error?.codexErrorInfo||'')+' '+text))return '服务报告上下文超限。连续模式可先压缩历史，或减少本轮材料；这与本地等待超时是不同情况。';
-      if (/找不到 Codex|ENOENT|not found.*codex|executable/i.test(text)) return '找不到 Codex 程序，请在右上角设置中填写 codex.exe 的完整路径。';
+      if (/找不到 Codex|ENOENT|not found.*codex|executable/i.test(text)) return '找不到 Codex 程序，请在右上角设置中填写 '+(g.CodexPlatform?.isMac?'codex':'codex.exe')+' 的完整路径。';
       if (/Unauthorized|not logged|authentication/i.test(text)) return 'Codex 尚未登录或登录已失效。请在 Codex CLI 完成登录后重新连接。';
       return text;
     }
 
     async executable() {
-      const configured = Services.prefs.getStringPref(PREF + 'codexPath', '').trim().replace(/^"(.*)"$/, '$1');
+      let configured = Services.prefs.getStringPref(PREF + 'codexPath', '').trim().replace(/^["'](.*)["']$/, '$1');
+      const isMac=g.CodexPlatform?.isMac;
+      if(isMac&&configured.startsWith('~/'))configured=PathUtils.join(Services.dirsvc.get('Home',Ci.nsIFile).path,configured.slice(2));
+      if(isMac&&/\.app\/?$/i.test(configured))configured=PathUtils.join(configured.replace(/\/$/,''),'Contents','Resources','codex');
       let outdated = false;
       if (configured) {
-        if (PathUtils.isAbsolute(configured) && await IOUtils.exists(configured)) return configured;
+        if (PathUtils.isAbsolute(configured) && await IOUtils.exists(configured)) {const stat=await IOUtils.stat(configured);if(stat.type==='regular')return configured;}
         const found = await Subprocess.pathSearch(configured).catch(() => null); if (found) return found;
         // Desktop app updates replace this versioned directory. A missing custom
         // executable remains an explicit error, while managed installations heal.
-        outdated = /(?:^|[\\/])OpenAI[\\/]Codex[\\/]bin[\\/][^\\/]+[\\/]codex\.exe$/i.test(configured);
-        if(!outdated){const error=new Error('保存的 Codex 程序路径不存在：'+configured+'。请清空此项使用自动查找，或填写有效的 codex.exe 路径。');error.code='CODEX_EXECUTABLE_NOT_FOUND';throw error;}
+        outdated = /(?:^|[\\/])OpenAI[\\/]Codex[\\/]bin[\\/][^\\/]+[\\/]codex\.exe$/i.test(configured)||isMac&&/\/Applications\/(?:Codex|ChatGPT)\.app\/Contents\/Resources\/(?:bin\/)?codex$/.test(configured);
+        if(!outdated){const error=new Error('保存的 Codex 程序路径不存在或不是程序文件：'+configured+'。请清空此项使用自动查找，或填写有效的 '+(isMac?'codex':'codex.exe')+' 路径。');error.code='CODEX_EXECUTABLE_NOT_FOUND';throw error;}
       }
       const accept=path=>{
         if(outdated){
@@ -85,6 +88,12 @@
         }
         return path;
       };
+      if(isMac){
+        const env=Subprocess.getEnvironment();let home=env.HOME;try{home||=Services.dirsvc.get('Home',Ci.nsIFile).path;}catch{}
+        for(const candidate of g.CodexPlatform.macCandidates(home))try{if(await IOUtils.exists(candidate)&&(await IOUtils.stat(candidate)).type==='regular')return accept(candidate);}catch{}
+        const found=await Subprocess.pathSearch('codex').catch(()=>null);if(found)return accept(found);
+        const error=new Error('未找到 Mac 版 Codex。请安装并登录 Codex，或在设置中填写 codex 完整路径，例如 /Applications/Codex.app/Contents/Resources/codex。');error.code='CODEX_EXECUTABLE_NOT_FOUND';throw error;
+      }
       for (const name of ['codex.exe', 'codex']) { const found = await Subprocess.pathSearch(name).catch(() => null); if (found) return accept(found); }
       const env = Subprocess.getEnvironment();
       let localAppData=env.LOCALAPPDATA||env.LocalAppData;
@@ -110,7 +119,7 @@
     async makeTransport(callbacks) {
       await this.licensing?.check();
       const executable = await this.executable();
-      const process = await Subprocess.call({ command: executable, arguments: ['app-server', '--listen', 'stdio://'], workdir: this.workdir, stderr: 'pipe' });
+      const process = await Subprocess.call({ command: executable, arguments: ['app-server', '--listen', 'stdio://'], workdir: this.workdir, stderr: 'pipe',...(g.CodexPlatform?.isMac?{environment:g.CodexPlatform.environment(Subprocess.getEnvironment())}:{}) });
       let errorTail = '';
       void (async () => { try { let data; while ((data = await process.stderr.readString())) errorTail = (errorTail + data).slice(-3000); } catch {} })();
       void (async () => {

@@ -47,7 +47,7 @@
     const limit=field('每篇活跃对话上限',el(doc,'input'));limit.type='number';limit.min=1;limit.max=200;limit.value=controller.prefInt('maxChats',50);limit.addEventListener('change',()=>{controller.setPrefInt('maxChats',Math.max(1,Math.min(200,Number(limit.value)||50)));});
     const font=field('字号',el(doc,'select'));options(font,[['12','12'],['14','14'],['16','16'],['18','18']],String(controller.prefInt('fontSize',14)));font.addEventListener('change',()=>{controller.setPrefInt('fontSize',Number(font.value));controller.refreshViews();});
     const theme=field('界面主题',el(doc,'select'));options(theme,[['dark','深色'],['light','浅色'],['auto','跟随系统']],controller.prefString('theme','dark'));theme.addEventListener('change',()=>{controller.setPrefString('theme',theme.value);controller.refreshViews();});
-    const path=field('Codex 程序路径',el(doc,'input'));path.value=controller.prefString('codexPath','');path.placeholder='留空自动查找 codex.exe';
+    const path=field('Codex 程序路径',el(doc,'input'));path.value=controller.prefString('codexPath','');path.placeholder=g.CodexPlatform.isMac?'留空自动查找 Codex.app / codex':'留空自动查找 codex.exe';
     settings.append(button(doc,'保存路径并重连',act(async()=>{controller.setPrefString('codexPath',path.value.trim());await controller.reconnect();})));
     settings.append(el(doc,'div','cz-hint','连续历史由本机 Codex 管理压缩；限量模式截取最近几轮，并不是自动摘要。窗口以运行时报告为准。Skill 的依赖、联网和审批受本机环境与沙箱约束，不默认获得工作区外写入权限。'));
     const history=el(doc,'div','cz-history');view.history=history;const search=el(doc,'input','cz-search');search.placeholder='搜索所有文献的对话';view.search=search;search.addEventListener('input',()=>renderHistory(controller,view));history.append(search);const historyList=el(doc,'div','cz-history-list');view.historyList=historyList;history.append(historyList);

@@ -3,7 +3,7 @@
   const {IOUtils,PathUtils,Cc,Ci,Services,Zotero}=g;
   const clone=v=>JSON.parse(JSON.stringify(v));
   const id=prefix=>prefix+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
-  const key=p=>PathUtils.normalize(p).replace(/\\/g,'/').replace(/\/$/,'').toLowerCase();
+  const key=p=>g.CodexPlatform.key(p);
   const inside=(p,root)=>key(p).startsWith(key(root)+'/');
   function temporary(file,workspace){if(file.temporary)return true;let value=String(file.path||'').replace(/\\/g,'/');const root=String(workspace||'').replace(/\\/g,'/').replace(/\/+$/,'')+'/';if(root.length>1&&value.toLowerCase().startsWith(root.toLowerCase()))value=value.slice(root.length);else if(/^[a-z]:\//i.test(value))return false;return /(^|\/)(?:tmp|temp|\.cache|__pycache__|pdf-cache)(?:\/|$)/i.test(value);}
   const fields=['messages','documents','files','settings','executionDir','threadId','lastThreadId','actualModel','modelChoice','backendMode','threadWorkspace','threadNeedsSeed','sentContextKey','sentContextThread','lastContext','lastUsage','contextWindow','contextUsage','lastTask','pendingFork','rebuildHistory','pdfToolsVersion','previousThreadId'];
@@ -44,7 +44,7 @@
     try{value=decodeURIComponent(value);}catch{}if(/[\r\n\0]/.test(value)||/^[a-z]+:/i.test(value)&&!/^([a-z]:[\\/]|file:)/i.test(value))throw new Error('不支持此文件路径');
     if(!PathUtils.isAbsolute(value)){if(!workspace)throw new Error('这条消息没有关联保存位置');value=PathUtils.join(workspace,...value.replace(/\\/g,'/').split('/'));}return PathUtils.normalize(value);
   }
-  async function open(controller,path,view,reveal=false,workspace){const full=resolve(path,workspace);const stat=await IOUtils.stat(full);const file=Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);file.initWithPath(full);if(reveal){file.reveal();return;}if(stat.type==='directory'){file.launch();return;}if(/\.(exe|com|bat|cmd|ps1|vbs|js|msi|lnk|scr|py|pyw|ahk|sh)$/i.test(full))throw new Error('可执行文件请使用“定位”后自行打开');return controller.openWorkspaceFile({path:full,name:PathUtils.filename(full)},view);}
+  async function open(controller,path,view,reveal=false,workspace){const full=resolve(path,workspace);const stat=await IOUtils.stat(full);const file=Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);file.initWithPath(full);if(reveal){file.reveal();return;}if(/\.(app|command|workflow|exe|com|bat|cmd|ps1|vbs|js|msi|lnk|scr|py|pyw|ahk|sh|zsh|scpt)$/i.test(full))throw new Error('可执行文件请使用“定位”后自行打开');if(stat.type==='directory'){file.launch();return;}return controller.openWorkspaceFile({path:full,name:PathUtils.filename(full)},view);}
   async function review(controller,chat){
     if(controller.operation||controller.importing||controller.managementBusy)throw new Error('请等待当前操作结束');initialize(chat);const files=new Map();
     const add=async(path,kind)=>{try{const stat=await checkedFile(path,chat.workspace);const k=key(path);if(files.has(k))return;const shared=otherReferences(controller,chat,path),activeSource=(chat.documents||[]).some(d=>{try{return key(controller.documentPath(d))===k;}catch{return false;}});files.set(k,{path,name:PathUtils.filename(path),size:stat.size,modified:stat.lastModified,kind,protected:shared||activeSource,reason:shared?'其他对话或保留版本仍引用':activeSource?'当前仍在使用的来源副本':''});}catch{/* Never include external originals or links. */}};
@@ -56,14 +56,14 @@
   }
   async function nativeRecycle(controller,action,path,destination,root){
     const Subprocess=g.ChromeUtils.importESModule('resource://gre/modules/Subprocess.sys.mjs').Subprocess;
-    const folder=PathUtils.join(controller.profileDir,'runtime-060');await IOUtils.makeDirectory(folder,{createAncestors:true,ignoreExisting:true});
-    for(const name of['recycle.ps1','Recycle.cs']){const data=await g.CodexResources.readText(controller.rootURI,'native/'+name);await IOUtils.writeUTF8(PathUtils.join(folder,name),data);}
-    const exe=PathUtils.join(Services.dirsvc.get('WinD',Ci.nsIFile).path,'System32','WindowsPowerShell','v1.0','powershell.exe');
-    const process=await Subprocess.call({command:exe,arguments:['-NoProfile','-NonInteractive','-STA','-ExecutionPolicy','Bypass','-File',PathUtils.join(folder,'recycle.ps1')],stderr:'pipe'});
+    const folder=PathUtils.join(controller.profileDir,'runtime-066');await IOUtils.makeDirectory(folder,{createAncestors:true,ignoreExisting:true});
+    const plan=g.CodexPlatform.recyclePlan(folder);
+    for(const name of plan.files){const data=await g.CodexResources.readText(controller.rootURI,'native/'+name);await IOUtils.writeUTF8(PathUtils.join(folder,name),data);}
+    const process=await Subprocess.call({command:plan.command,arguments:plan.arguments,stderr:'pipe'});
     await process.stdin.write(JSON.stringify({action,path,destination,root}));await process.stdin.close();
     const drain=async pipe=>{let text='',chunk;while((chunk=await pipe.readString()))text+=chunk;return text;};
     const [out,err,result]=await Promise.all([drain(process.stdout),drain(process.stderr),process.wait()]);
-    let parsed;try{parsed=JSON.parse(out.trim());}catch{throw new Error('Windows 回收操作未返回有效结果：'+err.slice(0,200));}if(result.exitCode||!parsed.ok)throw new Error(parsed.error||err||'Windows 回收操作失败');return parsed;
+    let parsed;try{parsed=JSON.parse(out.trim());}catch{throw new Error('系统文件清理未返回有效结果：'+err.slice(0,200));}if(result.exitCode||!parsed.ok)throw new Error(parsed.error||err||'系统文件清理失败');return parsed;
   }
   function removeAsset(chat,path){const k=key(path);chat.files=(chat.files||[]).filter(f=>key(f.path)!==k);for(const m of chat.messages){m.files=(m.files||[]).filter(f=>key(f.path)!==k);m.generatedImages=(m.generatedImages||[]).filter(f=>key(f.path)!==k);if(m.artifact&&key(PathUtils.join(m.artifact.baseDir,m.artifact.id+'.svg'))===k){m.removedArtifactTitle=m.artifact.graph.title;delete m.artifact;}}}
   function journal(chat){chat.managementJournal||=[];return chat.managementJournal;}
@@ -81,7 +81,7 @@
   }
   async function undo(controller,chat){
     if(controller.operation||controller.importing||controller.managementBusy)throw new Error('请等待当前操作结束');const entry=journal(chat).at(-1);if(!entry)throw new Error('没有可撤销的清理');if(entry.afterVersionId&&entry.afterVersionId!==chat.versionId)throw new Error('请切回执行清理时的版本');controller.managementBusy=true;
-    try{for(const file of entry.recycled){if(file.restored)continue;if(await IOUtils.exists(file.path))throw new Error('原路径已被占用，未覆盖：'+file.path);if(!inside(file.path,chat.workspace))throw new Error('恢复路径已失效');await checkedParent(file.path,chat.workspace);await nativeRecycle(controller,'restore',file.recycledPath,file.path);file.restored=true;await controller.persist();}
+    try{for(const file of entry.recycled){if(file.restored)continue;if(await IOUtils.exists(file.path))throw new Error('原路径已被占用，未覆盖：'+file.path);if(!inside(file.path,chat.workspace))throw new Error('恢复路径已失效');await checkedParent(file.path,chat.workspace);await nativeRecycle(controller,'restore',file.recycledPath,file.path,chat.workspace);file.restored=true;await controller.persist();}
       // Undo is offered only until the next content mutation; it cannot discard a later answer.
       load(chat,entry.before);invalidate(chat);journal(chat).pop();await controller.persist();
     }finally{controller.managementBusy=false;controller.refreshViews();}

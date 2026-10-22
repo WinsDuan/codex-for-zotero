@@ -31,7 +31,17 @@
       return this.window().btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
     async device() {
-      if (Services.appinfo.OS !== 'WINNT') throw failure('此授权预览版仅支持 Windows');
+      if (Services.appinfo.OS === 'Darwin') {
+        const {Subprocess}=g.ChromeUtils.importESModule('resource://gre/modules/Subprocess.sys.mjs');
+        const process=await Subprocess.call({command:'/usr/sbin/ioreg',arguments:['-rd1','-c','IOPlatformExpertDevice'],stderr:'pipe'});
+        const drain=async pipe=>{let text='',part;while((part=await pipe.readString()))text+=part;return text;};
+        const [out,,result]=await Promise.all([drain(process.stdout),drain(process.stderr),process.wait()]);
+        const id=out.match(/"IOPlatformUUID"\s*=\s*"([a-f0-9-]{32,40})"/i)?.[1];
+        if(result.exitCode||!id)throw failure('无法读取 Mac 设备标识，请检查系统权限');
+        const hash=await this.window().crypto.subtle.digest('SHA-256',this.encode(PRODUCT+':mac-platform:v1:'+id.toLowerCase()));
+        return Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
+      }
+      if (Services.appinfo.OS !== 'WINNT') throw failure('此授权版本尚未适配当前系统');
       // Read only a Windows installation identifier. Never transmit its raw value.
       const key = Cc['@mozilla.org/windows-registry-key;1'].createInstance(Ci.nsIWindowsRegKey);
       let id;
@@ -45,7 +55,7 @@
       return Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('');
     }
     async requestCode() {
-      const payload = {v: 1, product: PRODUCT, device: await this.device(), platform: 'windows', createdAt: new Date().toISOString()};
+      const payload = {v: 1, product: PRODUCT, device: await this.device(), platform: Services.appinfo.OS==='Darwin'?'macos':'windows', createdAt: new Date().toISOString()};
       return 'CZR1.' + this.base64(this.encode(JSON.stringify(payload)));
     }
     async initialize() {

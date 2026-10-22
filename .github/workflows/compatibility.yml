@@ -1,0 +1,30 @@
+name: Platform compatibility
+on:
+  push:
+    paths: ['content/**', 'tests/**', 'bootstrap.js', 'packaging/**', '.github/workflows/compatibility.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-14, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Runtime architecture
+        run: node -p "process.platform + ' ' + process.arch"
+      - name: Regression and native macOS Trash checks
+        run: node --test tests/*.test.cjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and inspect portable XPI
+        run: python packaging/build_xpi.py

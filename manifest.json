@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Codex for Zotero · 研桥",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "Codex for Zotero · 研桥文献工作台：通过本机 Codex 辅助论文阅读、文献比较、交互学习与科研制图。",
   "icons": {
     "32": "content/icons/research-bridge-32.png",

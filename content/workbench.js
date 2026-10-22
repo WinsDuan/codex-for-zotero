@@ -53,13 +53,13 @@
       const doc=win?.document,toolbar=doc?.getElementById('zotero-tabs-toolbar');
       if(!toolbar||this.entryWindows.has(win))return;
       const html='http://www.w3.org/1999/xhtml';
-      const button=doc.createElementNS(html,'button');button.id='codex-for-zotero-open-pane';button.type='button';button.title='研桥文献助手：打开右侧面板（Ctrl+Alt+C）';button.setAttribute('aria-label','打开右侧研桥文献助手');
+      const button=doc.createElementNS(html,'button');button.id='codex-for-zotero-open-pane';button.type='button';button.title='研桥文献助手：打开右侧面板（'+g.CodexPlatform.shortcut+'）';button.setAttribute('aria-label','打开右侧研桥文献助手');
       button.style.cssText='display:flex;align-items:center;gap:3px;margin:0 5px;padding:2px 6px;border:1px solid #8886;border-radius:5px;background:transparent;color:inherit;font:inherit;cursor:pointer;flex-shrink:0';
       const icon=doc.createElementNS(html,'img');icon.src='chrome://codex-for-zotero/content/icons/research-bridge-dark-24.png';icon.alt='';icon.width=24;icon.height=24;icon.style.cssText='box-sizing:border-box;padding:2px;background:#23655b;border-radius:5px;display:block';
       const label=doc.createElementNS(html,'span');label.textContent='研桥';button.append(icon,label);
       const open=()=>this.revealPane(win).catch(e=>{Zotero.logError(e);this.openWindow();});button.addEventListener('click',open);
       toolbar.insertBefore(button,doc.getElementById('zotero-tb-sync'));
-      const keys=doc.createXULElement('keyset');keys.id='codex-for-zotero-keyset';const key=doc.createXULElement('key');key.setAttribute('key','C');key.setAttribute('modifiers','control,alt');key.addEventListener('command',open);keys.append(key);doc.documentElement.append(keys);
+      const keys=doc.createXULElement('keyset');keys.id='codex-for-zotero-keyset';const key=doc.createXULElement('key');key.setAttribute('key','C');key.setAttribute('modifiers',g.CodexPlatform.isMac?'meta,alt':'control,alt');key.addEventListener('command',open);keys.append(key);doc.documentElement.append(keys);
       this.entryWindows.set(win,{button,keys});
       win.addEventListener('unload',()=>this.entryWindows.delete(win),{once:true});
     }
