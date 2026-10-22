@@ -1,10 +1,24 @@
 # Codex for Zotero · 研桥
 
-**简介：** Codex for Zotero · 研桥是一款面向 Windows 与 Zotero 10 的文献阅读工作台。它把 Zotero 文献、原始 PDF、本机 Codex 对话和研究产物连接起来，帮助读者阅读论文、比较文献、理解图表、生成科研示意图并开展交互学习。“研桥”是本项目的中文品牌名；仓库与插件 ID 延续 Codex for Zotero。
+**简介：** Codex for Zotero · 研桥是一款面向 Windows、macOS 与 Zotero 10 的文献阅读工作台。它把 Zotero 文献、原始 PDF、本机 Codex 对话和研究产物连接起来，帮助读者阅读论文、比较文献、理解图表、生成科研示意图并开展交互学习。“研桥”是本项目的中文品牌名；仓库与插件 ID 延续 Codex for Zotero。
 
 > **非官方项目声明：** 本插件由独立开发者维护，不由 Zotero / Corporation for Digital Scholarship、OpenAI 或 Codex 团队开发、授权、认证或背书。项目名称与图标用于说明兼容和集成关系，详见 [第三方声明](THIRD-PARTY-NOTICES.txt)。
 
-## 0.6.5 下载
+## 0.6.6 macOS 下载
+
+- [macOS 完整分享包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/Codex-for-Zotero-0.6.6-macOS.zip)：XPI、离线说明、一键环境检查、Mac 验收表与干净源码。
+- [0.6.6 插件 XPI](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.6.xpi) · [源码包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.6-source.zip)
+- [Mac 安装与使用](docs/macOS安装与使用.md) · [验证状态](docs/macOS验证状态.md)
+
+**已验证：** [Apple Silicon 与 Intel Mac 的自动检查](https://github.com/WinsDuan/codex-for-zotero/actions/runs/39700450352)均为 47 项通过，包含真实废纸篓往返、路径安全、诊断脚本和 XPI 构建。**尚需验收：** Mac 中 Zotero 图形界面、用户账号连接和真实模型 PDF/图片响应，按随包验收表执行。
+
+| macOS 文件 | SHA-256 |
+| --- | --- |
+| macOS ZIP | `bad1895eb4bf60400fb8264fab3c42d0396491bae4e682d13c842ed27f4ee919` |
+| XPI | `ba8846298be5db9f3d78c8d89f67ea6746fb79e81d29b350e02086f714eb8e6c` |
+| 源码 ZIP | `4942c05843f5734c7efb40ffe7549c63f3bcc073e42651cd87d12bef8d775016` |
+
+## 0.6.5 Windows 下载
 
 - [Windows 完整分享包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/Codex-for-Zotero-0.6.5-Windows.zip)：包含 XPI、离线安装说明和干净源码包。
 - [Zotero 插件 XPI](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.5.xpi)
@@ -37,7 +51,7 @@ SHA-256：
 
 ## 安装与使用
 
-1. Windows 电脑需安装 Zotero 10.0.x，并安装、登录本机 Codex。
+1. Windows 或 Mac 电脑需安装 Zotero 10.0.x，并安装、登录本机 Codex。Mac 用户优先查看上面的专用说明。
 2. 在 Zotero 打开「工具 → 插件」，选择齿轮菜单中的「从文件安装插件」，选取 XPI。
 3. 按 Zotero 提示重启后，点 Zotero 顶部的「研桥」入口或按 `Ctrl+Alt+C`。
 4. 首次开始每条对话时选择保存位置。打开要读的 PDF 后，可直接询问论文正文或图表；查看回答下方的 PDF 阅读依据，确认页数和图像覆盖。

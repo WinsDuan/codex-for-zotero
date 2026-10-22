@@ -1,0 +1,25 @@
+# 0.6.6 macOS 适配验证状态
+
+更新日期：2026-10-22。
+
+## 本地 Windows 检查
+
+45 项通过，2 项 Mac 原生检查因系统不同跳过。覆盖 Mac 路径发现、Homebrew 路径、`.app` 路径、失效路径恢复、GUI PATH、大小写边界、工作区迁移、平台命令选择，以及原有协议、排版和工作区逻辑。
+
+## GitHub Mac 检查
+
+已通过的运行：https://github.com/WinsDuan/codex-for-zotero/actions/runs/39700450352
+
+验证代码提交：`d26674bbca7426be05600960406c2560e865ba7a`。
+
+| 环境 | 结果 | 实际范围 |
+| --- | --- | --- |
+| macos-14 · Apple Silicon / arm64 | 47 项通过，0 失败，0 跳过 | 包含真实 Foundation 废纸篓往返、不覆盖、符号链接与目录边界保护、诊断脚本运行和 zsh 启动脚本语法；XPI 构建通过 |
+| macos-15-intel · Intel / x64 | 47 项通过，0 失败，0 跳过 | 同上；XPI 构建通过 |
+| windows-latest | 45 项通过，2 项 Mac 原生项目跳过 | Windows 原有逻辑和 Mac 分支模拟；XPI 构建通过 |
+
+这些 Mac 作业实际运行了 macOS 系统操作，不只是 Windows 上的模拟。未安装并登录用户的 Zotero/Codex，因此不据此宣称图形界面和模型问答已全量验收。
+
+## 尚需真实用户环境验收
+
+Mac 上安装到 Zotero 后的完整图形界面操作、账号连接、模型实际 PDF 图文响应、生图、本机 Skill、文件夹权限和外置磁盘。当前工作电脑为 Windows，不把源码模拟检查或 CI 文件操作等同于这些项目已通过。

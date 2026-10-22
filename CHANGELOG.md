@@ -1,5 +1,21 @@
 # 更新日志
 
+## 0.6.6 · 2026-10-22 · macOS 适配
+
+- 增加 macOS 分享包，沿用插件 ID；插件脚本适用于 Apple Silicon 和 Intel，Codex 引擎由用户单独安装。
+- 自动发现系统/用户 Applications 中的 Codex 引擎、常见 Homebrew 和 PATH 安装；支持 .app 路径与 ~ 家目录，补充 GUI 进程环境。
+- 增加 ⌘⌥C 入口、⌘点击文件路径、Finder 定位和废纸篓清理/撤销；执行路径采用参数和 JSON 输入，未加入 shell 拼接。
+- 保留大小写路径，避免在区分大小写 APFS 上混淆对话或清理范围；点击 .app/.command 等可执行产物仅可定位。
+- 修复 JXA 对象输出引用与 macOS 路径规范化问题。Apple Silicon 和 Intel 的真实系统操作检查均通过。
+- 提供离线安装说明、一键环境报告、逐项验收表、跨平台 XPI 构建脚本与源码包。现有 Windows 0.6.5 下载保留。
+
+### 验证范围
+
+- GitHub Actions：https://github.com/WinsDuan/codex-for-zotero/actions/runs/39700450352
+- macos-14/arm64 和 macos-15-intel/x64：各 47 项通过、0 失败、0 跳过；包含真实原生废纸篓往返、不覆盖、边界和符号链接拦截、环境诊断脚本与 XPI 构建。
+- Windows：45 项通过，2 项仅限 macOS 的检查跳过。
+- 未在 Mac 的 Zotero GUI 登录用户账号发送模型请求；不把上述自动检查视为所有界面、模型或权限组合已通过。对应方法见 Mac 验收表。
+
 ## 0.6.5 · 2026-10-22
 
 ### 消息发送与连接恢复

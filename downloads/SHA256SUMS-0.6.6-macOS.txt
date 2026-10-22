@@ -1,0 +1,3 @@
+bad1895eb4bf60400fb8264fab3c42d0396491bae4e682d13c842ed27f4ee919  Codex-for-Zotero-0.6.6-macOS.zip
+ba8846298be5db9f3d78c8d89f67ea6746fb79e81d29b350e02086f714eb8e6c  codex-for-zotero-0.6.6.xpi
+4942c05843f5734c7efb40ffe7549c63f3bcc073e42651cd87d12bef8d775016  codex-for-zotero-0.6.6-source.zip
