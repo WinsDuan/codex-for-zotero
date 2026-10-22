@@ -1,6 +1,8 @@
 // Runs with macOS /usr/bin/osascript -l JavaScript. No Finder automation,
 // shell interpolation, admin access, or third-party runtime is required.
 ObjC.import('Foundation');
+ObjC.import('AppKit');
+function trace(stage){if(ObjC.unwrap($.NSProcessInfo.processInfo.environment.objectForKey($('RESEARCH_BRIDGE_NATIVE_DEBUG')))==='1')console.log(stage);}
 function run() {
   try {
     var input=$.NSFileHandle.fileHandleWithStandardInput.readDataToEndOfFile;
@@ -39,9 +41,11 @@ function perform(request) {
     if(request.action==='permanent'){
       if(!fm.removeItemAtURLError(fileURL,error))fail(error,'Cannot delete file');return{ok:true};
     }
-    var result=Ref();
+    trace('before-trash');var result=Ref();
     if(!fm.trashItemAtURLResultingItemURLError(fileURL,result,error))fail(error,'Cannot move file to Trash; no permanent fallback is used');
+    trace('after-trash');
     if(!result[0])throw new Error('macOS did not return a restorable Trash URL');
+    trace('after-result');
     return{ok:true,recycledPath:ObjC.unwrap(result[0].path)};
   }
   if(request.action==='restore'){

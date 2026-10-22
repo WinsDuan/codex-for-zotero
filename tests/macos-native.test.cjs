@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawnSync}=require('node:child_process');
 const helper=path.resolve(__dirname,'../content/native/recycle-macos.js');
-function call(request){const r=spawnSync('/usr/bin/osascript',['-l','JavaScript',helper],{input:JSON.stringify(request),encoding:'utf8',timeout:20000});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout);}
+function call(request){const r=spawnSync('/usr/bin/osascript',['-l','JavaScript',helper],{input:JSON.stringify(request),encoding:'utf8',timeout:20000,env:{...process.env,RESEARCH_BRIDGE_NATIVE_DEBUG:'1'}});assert.equal(r.status,0,JSON.stringify({stderr:r.stderr,signal:r.signal,error:r.error?.message,action:request.action}));return JSON.parse(r.stdout);}
 test('native macOS Trash round trip, boundaries, symlinks and no overwrite',{skip:process.platform!=='darwin'},()=>{
   const base=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'research-bridge-mac-')),root=path.join(base,'对话 With Spaces');fs.mkdirSync(root);fs.mkdirSync(path.join(os.homedir(),'.Trash'),{recursive:true});
   const file=path.join(root,'科研图 100%.txt'),external=path.join(base,'external.txt');fs.writeFileSync(file,'test generated artifact');fs.writeFileSync(external,'keep');
