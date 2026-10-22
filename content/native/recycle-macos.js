@@ -20,9 +20,9 @@ function perform(request) {
     // Keep the actual caller path so symlink checks inspect the correct object.
     return '/'+value.split('/').filter(function(part){return part!=='';}).join('/');
   }
-  function fail(error,message) {throw new Error(error[0]?ObjC.unwrap(error[0].localizedDescription):message);}
+  function fail(error,message) {var detail;try{detail=ObjC.unwrap(error.localizedDescription);}catch(e){}throw new Error(detail||message);}
   function attributes(path) {
-    var error=Ref(),value=fm.attributesOfItemAtPathError($(path),error);
+    var error=$(),value=fm.attributesOfItemAtPathError($(path),error);
     if(!value)fail(error,'Cannot inspect file');return value;
   }
   function fileType(path) {return ObjC.unwrap(attributes(path).objectForKey($.NSFileType));}
@@ -37,16 +37,16 @@ function perform(request) {
   if(request.action==='recycle'||request.action==='permanent'){
     if(root==='/'||path.indexOf(root.replace(/\/$/,'')+'/')!==0)throw new Error('File is outside the conversation folder');
     regular(path);
-    var fileURL=$.NSURL.fileURLWithPath($(path)),error=Ref();
+    var fileURL=$.NSURL.fileURLWithPath($(path)),error=$();
     if(request.action==='permanent'){
       if(!fm.removeItemAtURLError(fileURL,error))fail(error,'Cannot delete file');return{ok:true};
     }
-    trace('before-trash');var result=Ref();
+    trace('before-trash');var result=$();
     if(!fm.trashItemAtURLResultingItemURLError(fileURL,result,error))fail(error,'Cannot move file to Trash; no permanent fallback is used');
     trace('after-trash');
-    if(!result[0])throw new Error('macOS did not return a restorable Trash URL');
+    var recycledPath=ObjC.unwrap(result.path);if(!recycledPath)throw new Error('macOS did not return a restorable Trash URL');
     trace('after-result');
-    return{ok:true,recycledPath:ObjC.unwrap(result[0].path)};
+    return{ok:true,recycledPath:recycledPath};
   }
   if(request.action==='restore'){
     var destination=normalized(request.destination);
@@ -57,7 +57,7 @@ function perform(request) {
     regular(path);var parent=ObjC.unwrap($(destination).stringByDeletingLastPathComponent);noLinks(parent);
     if(fileType(parent)!=='NSFileTypeDirectory')throw new Error('Restore parent is not a directory');
     if(fm.fileExistsAtPath($(destination)))throw new Error('Destination exists; it was not overwritten');
-    var moveError=Ref();
+    var moveError=$();
     if(!fm.moveItemAtURLToURLError($.NSURL.fileURLWithPath($(path)),$.NSURL.fileURLWithPath($(destination)),moveError))fail(moveError,'Cannot restore file');
     return{ok:true};
   }

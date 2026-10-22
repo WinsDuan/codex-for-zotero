@@ -41,7 +41,7 @@
   }
   function resolve(path,workspace){
     let value=String(path).trim().replace(/^['"`]|['"`]$/g,'');if(/^file:/i.test(value)){const uri=Services.io.newURI(value).QueryInterface(Ci.nsIFileURL);value=uri.file.path;}
-    try{value=decodeURIComponent(value);}catch{}if(/[\r\n\0]/.test(value)||/^[a-z]+:/i.test(value)&&!/^([a-z]:[\\/]|file:)/i.test(value))throw new Error('不支持此文件路径');
+    if(/[\r\n\0]/.test(value)||/^[a-z]+:/i.test(value)&&!/^([a-z]:[\\/]|file:)/i.test(value))throw new Error('不支持此文件路径');
     if(!PathUtils.isAbsolute(value)){if(!workspace)throw new Error('这条消息没有关联保存位置');value=PathUtils.join(workspace,...value.replace(/\\/g,'/').split('/'));}return PathUtils.normalize(value);
   }
   async function open(controller,path,view,reveal=false,workspace){const full=resolve(path,workspace);const stat=await IOUtils.stat(full);const file=Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);file.initWithPath(full);if(reveal){file.reveal();return;}if(/\.(app|command|workflow|exe|com|bat|cmd|ps1|vbs|js|msi|lnk|scr|py|pyw|ahk|sh|zsh|scpt)$/i.test(full))throw new Error('可执行文件请使用“定位”后自行打开');if(stat.type==='directory'){file.launch();return;}return controller.openWorkspaceFile({path:full,name:PathUtils.filename(full)},view);}

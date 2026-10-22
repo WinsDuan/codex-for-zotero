@@ -1,5 +1,12 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{spawnSync}=require('node:child_process');
 const helper=path.resolve(__dirname,'../content/native/recycle-macos.js');
+test('Mac environment report and command launcher run without extra runtimes',{skip:process.platform!=='darwin'},()=>{
+  const script=path.resolve(__dirname,'../packaging/macos/check-environment.js');
+  const result=spawnSync('/usr/bin/osascript',['-l','JavaScript',script],{encoding:'utf8',timeout:30000});
+  assert.equal(result.status,0,result.stderr);const report=JSON.parse(result.stdout);
+  assert.equal(report.version,'0.6.6');assert.ok(['arm64','x86_64'].includes(report.architecture));assert.ok(['environment-ready','needs-attention'].includes(report.status));
+  assert.equal(spawnSync('/bin/zsh',['-n',path.resolve(__dirname,'../packaging/macos/检查环境.command')],{encoding:'utf8'}).status,0);
+});
 function call(request){const r=spawnSync('/usr/bin/osascript',['-l','JavaScript',helper],{input:JSON.stringify(request),encoding:'utf8',timeout:20000,env:{...process.env,RESEARCH_BRIDGE_NATIVE_DEBUG:'1'}});assert.equal(r.status,0,JSON.stringify({stderr:r.stderr,signal:r.signal,error:r.error?.message,action:request.action}));return JSON.parse(r.stdout);}
 test('native macOS Trash round trip, boundaries, symlinks and no overwrite',{skip:process.platform!=='darwin'},()=>{
   const base=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'research-bridge-mac-')),root=path.join(base,'对话 With Spaces');fs.mkdirSync(root);fs.mkdirSync(path.join(os.homedir(),'.Trash'),{recursive:true});

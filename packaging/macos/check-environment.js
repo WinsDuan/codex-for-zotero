@@ -4,8 +4,8 @@ function run(argv) {
   var path=ObjC.unwrap(env.objectForKey($('PATH')))||'';env.setObjectForKey($(path+':/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'),$('PATH'));
   function execute(command,args){
     try{
-      var task=$.NSTask.alloc.init,stdout=$.NSPipe.pipe,stderr=$.NSPipe.pipe,error=Ref();task.executableURL=$.NSURL.fileURLWithPath($(command));task.arguments=$(args);task.environment=env;task.standardOutput=stdout;task.standardError=stderr;
-      if(!task.launchAndReturnError(error))return{ok:false,error:error[0]?ObjC.unwrap(error[0].localizedDescription):'Cannot launch'};
+      var task=$.NSTask.alloc.init,stdout=$.NSPipe.pipe,stderr=$.NSPipe.pipe,error=$();task.executableURL=$.NSURL.fileURLWithPath($(command));task.arguments=$(args);task.environment=env;task.standardOutput=stdout;task.standardError=stderr;
+      if(!task.launchAndReturnError(error))return{ok:false,error:ObjC.unwrap(error.localizedDescription)||'Cannot launch'};
       var started=Date.now();while(task.running&&Date.now()-started<12000)$.NSThread.sleepForTimeInterval(0.05);
       if(task.running){task.terminate;return{ok:false,error:'Command timed out'};}
       var out=ObjC.unwrap($.NSString.alloc.initWithDataEncoding(stdout.fileHandleForReading.readDataToEndOfFile,$.NSUTF8StringEncoding))||'';
