@@ -14,7 +14,9 @@ function perform(request) {
   function normalized(value) {
     if(typeof value!=='string'||value.charAt(0)!=='/'||/[\r\n\0]/.test(value))throw new Error('Invalid absolute path');
     if(value.split('/').some(function(part){return part==='.'||part==='..';}))throw new Error('Relative path components are excluded');
-    return ObjC.unwrap($(value).stringByStandardizingPath);
+    // NSString standardization can rewrite /private/var to the /var symlink.
+    // Keep the actual caller path so symlink checks inspect the correct object.
+    return '/'+value.split('/').filter(function(part){return part!=='';}).join('/');
   }
   function fail(error,message) {throw new Error(error[0]?ObjC.unwrap(error[0].localizedDescription):message);}
   function attributes(path) {
@@ -24,7 +26,7 @@ function perform(request) {
   function fileType(path) {return ObjC.unwrap(attributes(path).objectForKey($.NSFileType));}
   function noLinks(path) {
     for(var cursor=path;;cursor=ObjC.unwrap($(cursor).stringByDeletingLastPathComponent)){
-      if(fileType(cursor)==='NSFileTypeSymbolicLink')throw new Error('Symbolic links are excluded');
+      if(fileType(cursor)==='NSFileTypeSymbolicLink')throw new Error('Symbolic links are excluded: '+cursor);
       if(cursor==='/')break;
     }
   }
