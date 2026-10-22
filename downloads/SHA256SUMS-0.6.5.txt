@@ -1,0 +1,3 @@
+14a2cc3d8f92f434d9aceb081abdcca46991c618c0156cb01c2b9ea6aa82f1b5  codex-for-zotero-0.6.5.xpi
+ee43cb147eaa306c5432f7b640cfeb589f986a113f1e1738a3222ac80738347e  Codex-for-Zotero-0.6.5-Windows.zip
+87ac37b2955b70c3d3b2b0058bee50683300eaeec4de25a7ec12928d15eb5e79  codex-for-zotero-0.6.5-source.zip

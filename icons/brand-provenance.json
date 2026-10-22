@@ -1,0 +1,16 @@
+{
+  "name": "研桥 / Research Bridge",
+  "version": 1,
+  "created": "2026-10-21",
+  "concept": "design/brand-concepts/research-bridge-v1.png",
+  "design": "Original book leaves and bridge arch, approved by the project owner; manually redrawn as flat SVG.",
+  "palette": {
+    "primary": "#23655b",
+    "fold": "#8bcac4"
+  },
+  "files": {
+    "research-bridge.svg": "835bf90d03aa244d32bca2a35b589cc644fefa058f2875f869064e899fc6820c",
+    "research-bridge-light.svg": "9500462e61d80340fc90372abc8cd243ee127f6bc6694595afa9007dc9565e83",
+    "research-bridge-dark.svg": "fbee20f3d0d618633950f793495282dd790a4e4dfa98d5312f02a22830e12788"
+  }
+}

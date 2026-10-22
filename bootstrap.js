@@ -11,6 +11,7 @@ async function startup(data) {
     Services,
     Cc,
     Ci,
+    Cu: Components.utils,
     ChromeUtils,
     IOUtils,
     PathUtils,
@@ -19,7 +20,7 @@ async function startup(data) {
     rootURI: data.rootURI,
   };
   scope.globalThis = scope;
-  for (const file of ["vendor/katex/katex.min.js", "vendor/marked/marked.umd.js", "license-policy.js", "licensing.js", "protocol.js", "state.js", "graphs.js", "study.js", "documents.js", "workspace.js", "management.js", "richtext.js", "experience.js", "ui.js", "main.js", "workbench.js"]) {
+  for (const file of ["vendor/katex/katex.min.js", "vendor/marked/marked.umd.js", "license-policy.js", "licensing.js", "protocol.js", "state.js", "graphs.js", "study.js", "documents.js", "workspace.js", "resources.js", "pdf-native.js", "pdf-reader.js", "management.js", "richtext.js", "experience.js", "ui.js", "main.js", "workbench.js"]) {
     Services.scriptloader.loadSubScriptWithOptions(data.rootURI + "content/" + file, { target: scope, ignoreCache: true });
   }
   CodexForZoteroScope = scope;

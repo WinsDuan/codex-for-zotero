@@ -2,7 +2,7 @@
 setlocal DisableDelayedExpansion
 chcp 65001 >nul
 title Codex for Zotero - Windows 环境检查
-echo Codex for Zotero 0.6.0 - Windows 环境检查
+echo Codex for Zotero - Research Bridge 0.6.5 - Windows 环境检查
 echo 此工具只检查本机程序和登录状态，不安装软件、不发送论文、不显示登录令牌。
 echo.
 set "CZ_RESULT=1"

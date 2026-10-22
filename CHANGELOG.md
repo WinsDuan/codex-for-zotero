@@ -1,5 +1,27 @@
 # 更新日志
 
+## 0.6.5 · 2026-10-22
+
+### 消息发送与连接恢复
+
+- 修复插件已连接时消息发送触发 `NS_ERROR_FAILURE [nsIURI.username]`：读取 XPI 内置 PDF Skill 改用本地资源通道，不再误走 HTTP 凭据解析。
+- 同步修复文件清理助手加载中的同类问题。
+- 包含 0.6.4 的 Codex 路径恢复：桌面版更新后旧官方版本目录失效时自动发现新程序并恢复自动检测，保留有效自定义路径。
+- 根目录源码、安装包与文档统一至 0.6.5，产品全名保留 Codex for Zotero 并添加“研桥”；使用原创图标。
+
+### 验证范围
+
+- 35 项资源读取、路径恢复、协议、排版与工作区回归检查通过。
+- 在本机日常 Zotero 配置实际发送请求并收到最终回答；research_pdf_read 返回物理第 1 页完整文字和图像，research_pdf_status 核对为文字 1/16、图像 1/16，无工具错误。此验证不代表模型已读完整篇，也不代表所有 PDF/模型均无兼容问题。
+- 安装前后已有对话保持完整，其他四个插件继续启用。
+
+### 文件
+
+- `downloads/Codex-for-Zotero-0.6.5-Windows.zip`
+- `downloads/codex-for-zotero-0.6.5.xpi`
+- `downloads/codex-for-zotero-0.6.5-source.zip`
+- 校验值见 README 和 `downloads/SHA256SUMS-0.6.5.txt`。旧版下载保留。
+
 ## 0.6.3 · 2026-10-22
 
 ### 原始 PDF 全文图文核读

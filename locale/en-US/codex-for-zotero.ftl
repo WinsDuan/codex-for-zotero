@@ -1,6 +1,6 @@
 codex-for-zotero-pane-title =
-    .label = Codex
+    .label = Research Bridge
 codex-for-zotero-pane-tooltip =
-    .tooltiptext = Read this paper with Codex
+    .tooltiptext = Research Bridge: read this paper with Codex
 codex-for-zotero-menu =
-    .label = Codex literature assistant…
+    .label = Research Bridge literature assistant…

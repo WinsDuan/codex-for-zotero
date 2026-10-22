@@ -2,7 +2,10 @@
   'use strict';
   const NS='http://www.w3.org/1999/xhtml';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  function citation(src){const m=src.match(/^:codex-file-citation\{((?:"(?:\\.|[^"\\])*"|[^"}])*)\}/);if(!m)return null;const attrs={};for(const a of m[1].matchAll(/([a-zA-Z]+)="((?:\\.|[^"\\])*)"/g)){try{attrs[a[1]]=JSON.parse('"'+a[2]+'"');}catch{attrs[a[1]]=a[2].replace(/\\"/g,'"');}}if(!attrs.path||attrs.path.length>4096||/[\r\n\0]/.test(attrs.path))return null;return{raw:m[0],path:attrs.path,label:attrs.path.replace(/\\/g,'/').split('/').at(-1)||'原始文件'};}
+  const readable=text=>String(text).replace(/:codex-file-citation\{(?:"(?:\\.|[^"\\])*"|[^"}])*\}/g,raw=>{const c=citation(raw);return c?'['+c.label+'](<'+c.path.replace(/>/g,'%3E')+'>)':raw;});
   const engine=new g.marked.Marked({gfm:true,breaks:false,async:false,renderer:{html(token){return esc(token.text);},image(token){return esc(token.text||'[图片链接]');}},extensions:[
+    {name:'czFileCitation',level:'inline',start(src){const at=src.indexOf(':codex-file-citation{');return at<0?undefined:at;},tokenizer(src){const c=citation(src);if(c)return{type:'czFileCitation',...c};},renderer(t){return'<a class="cz-file-citation" href="'+esc(t.path)+'">'+esc(t.label)+'</a>';}},
     {name:'czCjkStrong',level:'inline',start(src){return src.indexOf('**')<0?undefined:src.indexOf('**');},tokenizer(src){const match=src.match(/^\*\*([^\s*][^*\n]{0,1999}?)\*\*(?=[\p{L}\p{N}])/u);if(match&&/\p{Script=Han}/u.test(match[1])&&/\p{P}$/u.test(match[1]))return{type:'czCjkStrong',raw:match[0],tokens:this.lexer.inlineTokens(match[1])};},renderer(t){return'<strong>'+this.parser.parseInline(t.tokens)+'</strong>';}},
     {name:'czDisplayMath',level:'block',start(src){return src.search(/(?:\$\$|\\\[)/);},tokenizer(src){const match=src.match(/^(?:\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\])(?:\n|$)/);if(match)return{type:'czDisplayMath',raw:match[0],text:(match[1]||match[2]).trim()};},renderer(t){return'<span class="cz-math-slot" data-display="block">'+esc(t.text)+'</span>'; }},
     {name:'czInlineMath',level:'inline',start(src){const at=src.search(/(?:\$(?!\$)|\\\()/);return at<0?undefined:at;},tokenizer(src){const match=src.match(/^(?:\$([^$\n]+?)\$(?!\$)|\\\(([^\n]+?)\\\))/);if(match)return{type:'czInlineMath',raw:match[0],text:match[1]||match[2]};},renderer(t){return'<span class="cz-math-slot" data-display="inline">'+esc(t.text)+'</span>'; }},
@@ -23,7 +26,7 @@
       if(tag==='span'&&source.classList.contains('cz-math-slot')){formula(doc,target,source.textContent,source.dataset.display==='block');return;}
       if(!allowed.has(tag)){for(const child of source.childNodes)copy(child,target);return;}
       const node=doc.createElementNS(NS,tag);if(['th','td'].includes(tag)&&['left','center','right'].includes(source.getAttribute('align')))node.style.textAlign=source.getAttribute('align');
-      if(tag==='a'){const href=source.getAttribute('href')||'';if(/^https?:\/\//i.test(href)){node.href=href;node.addEventListener('click',event=>{event.preventDefault();g.Zotero.launchURL(href);});}else if(href&&!/^(?:javascript|data|vbscript):/i.test(href)){node.dataset.localPath=href;node.setAttribute('role','link');}}
+      if(tag==='a'){const href=source.getAttribute('href')||'';if(/^https?:\/\//i.test(href)){node.href=href;node.addEventListener('click',event=>{event.preventDefault();g.Zotero.launchURL(href);});}else if(href&&!/^(?:javascript|data|vbscript):/i.test(href)){node.dataset.localPath=href;node.setAttribute('role','link');if(source.classList.contains('cz-file-citation'))node.classList.add('cz-file-citation');}}
       if(tag==='input'){if(source.getAttribute('type')!=='checkbox')return;node.type='checkbox';node.checked=source.hasAttribute('checked');node.disabled=true;}
       if(tag==='code'&&/^language-[\w-]+$/.test(source.className))node.className=source.className;
       if(tag==='pre')node.className='cz-code';
@@ -34,5 +37,5 @@
     }
     for(const node of parsed.body.childNodes)copy(node,parent);
   }
-  g.CodexRichText={render,formula};
+  g.CodexRichText={render,formula,readable};
 })(this);

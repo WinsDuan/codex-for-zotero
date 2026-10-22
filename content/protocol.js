@@ -38,7 +38,7 @@
             onExit: error => { if (this.epoch === epoch) this.disconnect(error || new Error('Codex 进程已退出')); },
           });
           this.info = await this.request('initialize', {
-            clientInfo: { name: 'codex_for_zotero', title: 'Codex for Zotero', version: this.version },
+            clientInfo: { name: 'codex_for_zotero', title: 'Research Bridge for Zotero', version: this.version },
             capabilities: { experimentalApi: true },
           }, 30000);
           await this.notify('initialized', {});
@@ -104,15 +104,17 @@
       let result;
       if(this.requestHandler)try{result=await this.requestHandler(message);}catch(e){this.log('Client input: '+e.message);}
       if (!result&&message.method === 'item/permissions/requestApproval') result = { permissions: {}, scope: 'turn' };
+      else if (!result&&message.method === 'item/tool/call') result = { success:false,contentItems:[{type:'inputText',text:'客户端工具不可用，请如实说明，不能声称已读取文件或看到图片。'}] };
       else if (!result&&/requestApproval$/.test(message.method)) result = { decision: 'decline' };
       else if (!result&&/elicitation\/request$/.test(message.method)) result = { action: 'decline', content: null };
       else if (!result&&/requestUserInput$/.test(message.method)) result = { answers: {} };
       const response = result ? { id: message.id, result } : {
         id: message.id, error: { code: -32601, message: 'Unsupported client request' },
       };
-      try { if (this.transport) await this.transport.write(JSON.stringify(response) + '\n'); }
+      let delivered=false;
+      try { if (this.transport){await this.transport.write(JSON.stringify(response) + '\n');delivered=true;} }
       catch (error) { this.log(error.message); }
-      this.emit('client/requestAnswered', { method: message.method });
+      this.emit('client/requestAnswered', { method: message.method,callId:message.params?.callId,threadId:message.params?.threadId,delivered });
     }
 
     runTurn(params, options = {}) {

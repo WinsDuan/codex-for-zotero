@@ -5,7 +5,8 @@
   const id=prefix=>prefix+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
   const key=p=>PathUtils.normalize(p).replace(/\\/g,'/').replace(/\/$/,'').toLowerCase();
   const inside=(p,root)=>key(p).startsWith(key(root)+'/');
-  const fields=['messages','documents','files','settings','executionDir','threadId','lastThreadId','actualModel','modelChoice','backendMode','threadWorkspace','threadNeedsSeed','sentContextKey','sentContextThread','lastContext','lastUsage','contextWindow','contextUsage','lastTask','pendingFork','rebuildHistory'];
+  function temporary(file,workspace){if(file.temporary)return true;let value=String(file.path||'').replace(/\\/g,'/');const root=String(workspace||'').replace(/\\/g,'/').replace(/\/+$/,'')+'/';if(root.length>1&&value.toLowerCase().startsWith(root.toLowerCase()))value=value.slice(root.length);else if(/^[a-z]:\//i.test(value))return false;return /(^|\/)(?:tmp|temp|\.cache|__pycache__|pdf-cache)(?:\/|$)/i.test(value);}
+  const fields=['messages','documents','files','settings','executionDir','threadId','lastThreadId','actualModel','modelChoice','backendMode','threadWorkspace','threadNeedsSeed','sentContextKey','sentContextThread','lastContext','lastUsage','contextWindow','contextUsage','lastTask','pendingFork','rebuildHistory','pdfToolsVersion','previousThreadId'];
   function initialize(chat){
     chat.versionId||=id('v');chat.versionName||='原始版本';chat.versions||=[];
     for(const s of [chat,...chat.versions])for(const m of s.messages||[]){m.id||=id('m');m.workspace||=s.executionDir||chat.workspace;}
@@ -28,7 +29,7 @@
   function refs(state,controller){
     const result=new Set();const add=p=>{if(p&&PathUtils.isAbsolute(p))result.add(key(p));};
     for(const d of state.documents||[])try{add(controller.documentPath(d));add(controller.documentPath(d,true));}catch{}
-    for(const m of state.messages||[]){for(const i of m.imageRefs||[])add(i.path);for(const d of m.documentRefs||[])try{add(controller.documentPath(d));add(controller.documentPath(d,true));}catch{}for(const f of [...(m.generatedImages||[]),...(m.files||[])])add(f.path);if(m.artifact)add(PathUtils.join(m.artifact.baseDir||controller.artifactDir,m.artifact.id+'.svg'));}
+    add(state.lastContext?.pdfSkillPath);for(const s of state.lastContext?.sources||[])add(s.originalPath);for(const m of state.messages||[]){for(const r of m.pdfReads||[])add(r.path);for(const i of m.imageRefs||[])add(i.path);for(const d of m.documentRefs||[])try{add(controller.documentPath(d));add(controller.documentPath(d,true));}catch{}for(const f of [...(m.generatedImages||[]),...(m.files||[])])add(f.path);if(m.artifact)add(PathUtils.join(m.artifact.baseDir||controller.artifactDir,m.artifact.id+'.svg'));}
     for(const f of state.files||[])add(f.path);return result;
   }
   function otherReferences(controller,chat,path){const k=key(path);for(const s of controller.allSessions()){if(s!==chat&&refs(s,controller).has(k))return true;for(const v of s.versions||[])if(refs(v,controller).has(k))return true;}return false;}
@@ -50,12 +51,13 @@
     for(const f of chat.files||[])await add(f.path,'产物');for(const m of chat.messages){for(const f of [...(m.generatedImages||[]),...(m.files||[])])await add(f.path,'产物');if(m.artifact)await add(PathUtils.join(m.artifact.baseDir||controller.artifactDir,m.artifact.id+'.svg'),'科研图');}
     // Only enumerate attachment caches in known conversation folders, never Zotero originals.
     for(const root of new Set([chat.workspace,chat.executionDir].filter(Boolean))){const p=g.CodexWorkspace.paths(root);for(const folder of[p.uploads,p.sources])try{for(const path of await IOUtils.getChildren(folder)){const k=key(path);await add(path,'缓存');const row=files.get(k);if(row&&refs(chat,controller).has(k)){row.protected=true;row.reason='当前对话仍引用的来源副本';}}}catch{}}
+    for(const root of new Set([chat.workspace,chat.executionDir].filter(Boolean)))try{for(const path of await IOUtils.getChildren(PathUtils.join(g.CodexWorkspace.paths(root).sources,'originals'))){await add(path,'原文件副本');const row=files.get(key(path));if(row&&refs(chat,controller).has(key(path))){row.protected=true;row.reason='当前对话或阅读依据仍引用的原文件副本';}}}catch{}
     return [...files.values()];
   }
   async function nativeRecycle(controller,action,path,destination,root){
     const Subprocess=g.ChromeUtils.importESModule('resource://gre/modules/Subprocess.sys.mjs').Subprocess;
     const folder=PathUtils.join(controller.profileDir,'runtime-060');await IOUtils.makeDirectory(folder,{createAncestors:true,ignoreExisting:true});
-    for(const name of['recycle.ps1','Recycle.cs']){const data=await Zotero.File.getContentsAsync(controller.rootURI+'content/native/'+name);await IOUtils.writeUTF8(PathUtils.join(folder,name),data);}
+    for(const name of['recycle.ps1','Recycle.cs']){const data=await g.CodexResources.readText(controller.rootURI,'native/'+name);await IOUtils.writeUTF8(PathUtils.join(folder,name),data);}
     const exe=PathUtils.join(Services.dirsvc.get('WinD',Ci.nsIFile).path,'System32','WindowsPowerShell','v1.0','powershell.exe');
     const process=await Subprocess.call({command:exe,arguments:['-NoProfile','-NonInteractive','-STA','-ExecutionPolicy','Bypass','-File',PathUtils.join(folder,'recycle.ps1')],stderr:'pipe'});
     await process.stdin.write(JSON.stringify({action,path,destination,root}));await process.stdin.close();
@@ -86,5 +88,5 @@
   }
   async function checkedParent(path,root){let p=PathUtils.parent(path);while(true){const s=await IOUtils.stat(p,{followSymlinks:false});if(s.type!=='directory')throw new Error('恢复目标目录无效');if(key(p)===key(root))return;p=PathUtils.parent(p);if(!inside(p,root)&&key(p)!==key(root))throw new Error('恢复目标越界');}}
   function expireUndo(chat){chat.managementJournal=[];}
-  g.CodexManagement={clone,id,key,inside,initialize,snapshot,switchVersion,branch,history,invalidate,resolve,open,review,clean,undo,expireUndo,refs};
+  g.CodexManagement={clone,id,key,inside,temporary,initialize,snapshot,switchVersion,branch,history,invalidate,resolve,open,review,clean,undo,expireUndo,refs};
 })(this);

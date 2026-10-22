@@ -19,7 +19,7 @@ def digest(data):
 
 
 def source_files():
-    files = [ROOT / 'manifest.json', ROOT / 'bootstrap.js', ROOT / 'build.ps1', ROOT / 'LICENSE', ROOT / 'THIRD-PARTY-NOTICES.txt']
+    files = [ROOT / 'manifest.json', ROOT / 'bootstrap.js', ROOT / 'build.ps1', ROOT / 'LICENSE']
     for folder in ['content', 'icons', 'locale', 'tests', 'packaging']:
         files += sorted(p for p in (ROOT / folder).rglob('*')
                         if p.is_file() and '__pycache__' not in p.parts
@@ -52,8 +52,8 @@ def main():
         for name, data in core.items():
             if package.read(name) != data:
                 raise ValueError(f'XPI differs from saved source: {name}; rebuild XPI first')
-    content = {XPI.name: binary}
-    for name in ['安装与使用说明.md', '常用提问示例.md', '版本说明.md', '界面与对话管理.md',
+    content = {XPI.name: binary, 'LICENSE': (ROOT / 'LICENSE').read_bytes()}
+    for name in ['安装与使用说明.md', '常用提问示例.md', '版本说明.md', '界面与对话管理.md', '原始PDF自动阅读.md',
                  'THIRD-PARTY-NOTICES.txt', '检查环境.cmd']:
         text = (DOCS / name).read_text(encoding='utf-8').replace('__XPI_SHA256__', digest(binary))
         if name.endswith('.cmd'):
@@ -67,6 +67,10 @@ def main():
     content['开始这里.html'] = html.encode('utf-8')
     for name in ['reading.png', 'study.png']:
         content['images/' + name] = (DOCS / 'images' / name).read_bytes()
+    content['images/research-bridge.png'] = (ROOT / 'content/icons/research-bridge-128.png').read_bytes()
+    for name in ['research-bridge', 'research-bridge-light', 'research-bridge-dark']:
+        content['品牌图标/' + name + '.svg'] = (ROOT / 'icons' / (name + '.svg')).read_bytes()
+    content['品牌图标/research-bridge-512.png'] = (ROOT / 'content/icons/research-bridge-512.png').read_bytes()
     source = {f'codex-for-zotero-{VERSION}/' + p.relative_to(ROOT).as_posix(): p.read_bytes()
               for p in source_files()}
     source[f'codex-for-zotero-{VERSION}/README.md'] = (ROOT / 'packaging/SOURCE_README.md').read_bytes()

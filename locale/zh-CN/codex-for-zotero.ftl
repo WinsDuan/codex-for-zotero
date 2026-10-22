@@ -1,6 +1,6 @@
 codex-for-zotero-pane-title =
-    .label = Codex
+    .label = 研桥
 codex-for-zotero-pane-tooltip =
-    .tooltiptext = 与 Codex 阅读当前文献
+    .tooltiptext = 研桥：与 Codex 阅读当前文献
 codex-for-zotero-menu =
-    .label = Codex 文献助手…
+    .label = 研桥文献助手…

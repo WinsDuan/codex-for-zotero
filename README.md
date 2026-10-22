@@ -4,20 +4,27 @@
 
 > **非官方项目声明：** 本插件由独立开发者维护，不由 Zotero / Corporation for Digital Scholarship、OpenAI 或 Codex 团队开发、授权、认证或背书。项目名称与图标用于说明兼容和集成关系，详见 [第三方声明](THIRD-PARTY-NOTICES.txt)。
 
-## 0.6.3 下载
+## 0.6.5 下载
 
-- [Windows 完整分享包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/Codex-for-Zotero-0.6.3-Windows.zip)：包含 XPI、离线安装说明和干净源码包。
-- [Zotero 插件 XPI](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.3.xpi)
-- [独立源码包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.3-source.zip)
+- [Windows 完整分享包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/Codex-for-Zotero-0.6.5-Windows.zip)：包含 XPI、离线安装说明和干净源码包。
+- [Zotero 插件 XPI](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.5.xpi)
+- [独立源码包](https://github.com/WinsDuan/codex-for-zotero/raw/refs/heads/main/downloads/codex-for-zotero-0.6.5-source.zip)
 - [更新日志](CHANGELOG.md) · [原始 PDF 阅读指南](docs/原始PDF自动阅读.md)
 
 SHA-256：
 
 | 文件 | SHA-256 |
 | --- | --- |
-| Windows ZIP | `b579f299605b420607a39ee70fd86fe052b32164a5641fb0fe5077ae0698999b` |
-| XPI | `384439a42c574e2b5f6024d6d1aa6538f005a33a074d50a90149eb3d856a99bd` |
-| 源码 ZIP | `cf948ac818d7b5cc921471703de114405c9af24d920f0d057aead714377958e9` |
+| Windows ZIP | `ee43cb147eaa306c5432f7b640cfeb589f986a113f1e1738a3222ac80738347e` |
+| XPI | `14a2cc3d8f92f434d9aceb081abdcca46991c618c0156cb01c2b9ea6aa82f1b5` |
+| 源码 ZIP | `87ac37b2955b70c3d3b2b0058bee50683300eaeec4de25a7ec12928d15eb5e79` |
+
+## 0.6.5 修复内容
+
+- 修复“已连接但无法发送”：通过本地资源通道读取内置 PDF Skill，避免 Zotero 10 的 `NS_ERROR_FAILURE [nsIURI.username]` 异常。
+- 修复 Codex 桌面版更新后旧程序路径失效：自动发现新的官方安装位置；有效自定义路径仍优先使用。
+- 本机已完成真实发送与回复验证：原生 PDF 工具成功返回第 1 页文字和页面图像，覆盖状态为 1/16，无工具错误。本次没有把整篇标为已读。
+- 35 项回归检查通过；沿用原插件 ID，安装时覆盖升级，保留对话和其他插件。
 
 ## 能做什么
 

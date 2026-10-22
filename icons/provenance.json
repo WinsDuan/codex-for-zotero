@@ -1,9 +1,0 @@
-{
-  "source": "https://raw.githubusercontent.com/openai/openai-agents-python/main/docs/assets/logo.svg",
-  "retrieved": "2026-10-20",
-  "original_sha256": "b94ea61d860fae6f82f43571f36f17111fcf5d348e8e9cc22ae4b441c7560011",
-  "trademarkOwner": "OpenAI",
-  "usage": "Connection shortcut for OpenAI Codex; not plugin branding or endorsement",
-  "variants": "Original white SVG for dark backgrounds; identical geometry in black for light backgrounds",
-  "guidelines": "https://openai.com/brand/"
-}

@@ -24,7 +24,7 @@
       catch{throw new Error(name+'：无法提取 PDF，请检查是否加密或损坏；加密文件请先另存为可读取的 PDF。');}
       text=String(result.text||'');totalPages=result.totalPages||0;extractedPages=result.extractedPages||0;
       if(totalPages>extractedPages)warning='只提取前 '+extractedPages+' / '+totalPages+' 页。';
-      if(!text.trim())throw new Error(name+'：没有可提取的文字，可能是扫描件。请先 OCR，或上传相关页面图片。');
+      if(!text.trim()){text='[此 PDF 没有可提取的文字。原始 PDF 将作为来源保留，请使用 PDF 页面图像工具读取；不得根据此占位文字推断正文。]';warning='可能为扫描件：索引中没有正文文字，需查看原始 PDF 页面图像。';}
     }else if(type==='docx'){
       const zip=Cc['@mozilla.org/libjar/zip-reader;1'].createInstance(Ci.nsIZipReader);
       try{

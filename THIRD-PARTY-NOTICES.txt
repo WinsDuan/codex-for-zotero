@@ -1,43 +1,29 @@
-Codex for Zotero 0.6.0 — Third-Party Notices
+Codex for Zotero · 研桥 0.6.5
 
-NON-AFFILIATION NOTICE
-This is an independent, unofficial project. It is not developed, authorized,
-certified, sponsored, or endorsed by Zotero, the Corporation for Digital
-Scholarship, OpenAI, or the Codex team. Product names and the interface icon
-are used only to describe compatibility and integration. The icon identified
-below remains subject to its owner's trademark and brand-use rules and is not
-licensed under this project's MIT License.
+自定义 Zotero 插件。插件名称用于说明与 Codex 的连接关系，
+不代表 Zotero 或 OpenAI 官方发布、认证或背书。
 
-PROJECT LICENSE SCOPE
-The MIT License in the repository root applies to this project's original
-source code and documentation, except where a file or component has its own
-license or notice. Third-party software, assets, names, and marks retain their
-own terms. This project does not include Zotero, Codex, model weights, user
-accounts, credentials, papers, or conversation data.
+本包没有捆绑 Zotero、Codex 可执行程序、模型、用户配置、登录凭据、论文或真实聊天记录。
+示例截图由合成示例内容生成。
 
-Third-party components
+第三方排版组件：
 
 1. KaTeX 0.19.0
-   Project: https://katex.org/
-   License: MIT
-   License and source provenance: content/vendor/katex/LICENSE and
-   content/vendor/katex/provenance.json.
+   官方项目：https://katex.org/
+   许可证：MIT
+   完整许可证与包来源：XPI / 源码中的 content/vendor/katex/LICENSE、provenance.json。
 
 2. Marked 15.0.12
-   Project: https://marked.js.org/
-   License: MIT
-   License and source provenance: content/vendor/marked/LICENSE.md and
-   content/vendor/marked/provenance.json.
+   官方项目：https://marked.js.org/
+   许可证：MIT
+   完整许可证与包来源：XPI / 源码中的 content/vendor/marked/LICENSE.md、provenance.json。
 
-Interface icon
+研桥 / Research Bridge 为本项目原创书页桥梁图标。
+用户确认概念后手工绘制生产 SVG；来源记录见 icons/brand-provenance.json。
+发行包不再包含或使用 OpenAI 的结形标志。品牌独立不改变各服务的使用条件。
 
-The knot-shaped interface icon is derived from the OpenAI documentation mark:
-https://raw.githubusercontent.com/openai/openai-agents-python/main/docs/assets/logo.svg
-The project preserves its geometry and provides monochrome display versions.
-Source and SHA256 are recorded in icons/provenance.json. OpenAI brand guidance:
-https://openai.com/brand/
-The icon is not covered by this project's MIT License. Its inclusion does not
-mean this project is official or endorsed by OpenAI.
+本项目源码延续公开仓库的 MIT 许可证，见随包 LICENSE。
+上述第三方组件各自保留其许可证与版权声明。
+Zotero 与 Codex 的安装、使用遵循各自官方许可及服务条件。
 
-Zotero and Codex are third-party products. Their installation and use remain
-subject to their respective licenses, terms, and service conditions.
+PDF 阅读复用使用者本机 Zotero 自带的 PDF.js，不在本包中复制该组件；其版权与许可证以 Zotero 所附文件为准。

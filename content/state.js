@@ -1,9 +1,10 @@
 (function (global) {
   'use strict';
-  const defaults = { model: '', effort: '', historyMode: 'continuous', historyRounds: 12, historyChars: 24000, paperChars: 40000, answerLength: 'standard', fullText: false, multiPaper: false, toolMode: 'workspace', skillPath: '' };
+  const defaults = { model: '', effort: '', historyMode: 'continuous', historyRounds: 12, historyChars: 24000, paperChars: 40000, answerLength: 'standard', fullText: false, autoReadPDF: true, multiPaper: false, toolMode: 'workspace', skillPath: '' };
   const uuid = () => 'chat-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
   function settings(value = {}) {
     const out = { ...defaults, ...value };
+    out.autoReadPDF=value.autoReadPDF!==false;
     const clamp = (key, min, max) => { out[key] = Math.max(min, Math.min(max, Number(out[key]) || 0)); };
     clamp('historyRounds', 0, 100); clamp('historyChars', 0, 500000); clamp('paperChars', 1000, 2000000);
     if(!['readonly','workspace'].includes(out.toolMode))out.toolMode='workspace';
@@ -55,7 +56,7 @@
   }
   function exportMarkdown(chat, title) {
     return '# ' + (chat.name || 'Codex 对话') + '\n\n文献：' + title + '\n\n' + chat.messages.map(m => {
-      let text = '## ' + (m.role === 'user' ? '我' : 'Codex') + '\n\n' + m.text;
+      let text = '## ' + (m.role === 'user' ? '我' : 'Codex') + '\n\n' + (global.CodexRichText?.readable(m.text)||m.text);
       if (m.images?.length) text += '\n\n附件：' + m.images.map(i => i.name).join('、');
       if (m.documents?.length) text += '\n\n文档材料：' + m.documents.map(i => i.name).join('、');
       if (m.artifact?.graph) text += '\n\n```json\n' + JSON.stringify(m.artifact.graph, null, 2) + '\n```';
